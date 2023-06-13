@@ -3,7 +3,7 @@
     "description": "A lightweight CMS powered by Markdown and Nachos",
     "require": {
         "ext-json":  "*",
-        "christiangroeber/nacho": "*"
+        "pixlmint/nacho": "*"
     },
     "autoload": {
         "psr-4": {
