@@ -16,12 +16,7 @@ class CMSConfiguration
         return self::getConfigValue('mediaBaseUrl');
     }
 
-    public static function title(): string
-    {
-        return self::getConfigValue('title');
-    }
-
-    public static function version(): string|int
+    public static function version(): string|int|float
     {
         return self::getConfigValue('version');
     }
@@ -33,6 +28,6 @@ class CMSConfiguration
 
     private static function getConfigValue(string $confName): mixed
     {
-        return ConfigurationHelper::getInstance()->getCustomConfig('wiki')[$confName];
+        return ConfigurationHelper::getInstance()->getCustomConfig('base')[$confName];
     }
 }

@@ -8,6 +8,7 @@ return [
             'hook' => PixlMint\CMS\Hooks\RouteCheckHook::class,
         ],
     ],
+    'base' => require_once('base.php'),
     'security' => [
         'user_model' => PixlMint\CMS\Models\TokenUser::class,
         'userHandler' => PixlMint\CMS\Helpers\CustomUserHelper::class,

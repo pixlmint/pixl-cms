@@ -16,13 +16,11 @@ class InitController extends AbstractController
     {
         $isTokenValid = $this->isTokenValid();
 
-        $title = CMSConfiguration::title();
-
         $isAdminCreated = $this->isAdminCreated();
 
         $version = CMSConfiguration::version();
 
-        return $this->json(['is_token_valid' => $isTokenValid, 'title' => $title, 'version' => $version, 'adminCreated' => $isAdminCreated]);
+        return $this->json(['is_token_valid' => $isTokenValid, 'version' => $version, 'adminCreated' => $isAdminCreated]);
     }
 
     public function isAdminCreated(): bool
