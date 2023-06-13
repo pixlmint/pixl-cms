@@ -1,0 +1,13 @@
+{
+    "name": "pixlmint/pixl-cms",
+    "description": "A lightweight CMS powered by Markdown and Nachos",
+    "require": {
+        "ext-json":  "*",
+        "christiangroeber/nacho": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "PixlMint\\CMS\\": "src/"
+        }
+    }
+}

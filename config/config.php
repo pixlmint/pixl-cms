@@ -1,0 +1,15 @@
+<?php
+
+return [
+    'routes' => require_once('routes.php'),
+    'hooks' => [
+        [
+            'anchor' => 'post_find_route',
+            'hook' => PixlMint\CMS\Hooks\RouteCheckHook::class,
+        ],
+    ],
+    'security' => [
+        'user_model' => PixlMint\CMS\Models\TokenUser::class,
+        'userHandler' => PixlMint\CMS\Helpers\CustomUserHelper::class,
+    ],
+];
