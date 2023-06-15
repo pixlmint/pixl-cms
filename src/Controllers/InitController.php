@@ -2,6 +2,9 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use Nacho\Helpers\HookHandler;
+use Nacho\Nacho;
+use PixlMint\CMS\Anchors\InitAnchor;
 use PixlMint\CMS\Helpers\CMSConfiguration;
 use PixlMint\CMS\Helpers\TokenHelper;
 use Nacho\Controllers\AbstractController;
@@ -15,12 +18,13 @@ class InitController extends AbstractController
     public function init(): string
     {
         $isTokenValid = $this->isTokenValid();
-
         $isAdminCreated = $this->isAdminCreated();
-
         $version = CMSConfiguration::version();
 
-        return $this->json(['is_token_valid' => $isTokenValid, 'version' => $version, 'adminCreated' => $isAdminCreated]);
+        $init = ['is_token_valid' => $isTokenValid, 'version' => $version, 'adminCreated' => $isAdminCreated];
+        $init = HookHandler::getInstance()->executeHook(InitAnchor::getName(), ['init' => $init]);
+
+        return $this->json($init);
     }
 
     public function isAdminCreated(): bool

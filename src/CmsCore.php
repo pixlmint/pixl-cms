@@ -3,6 +3,8 @@
 namespace PixlMint\CMS;
 
 use Nacho\Core;
+use Nacho\Helpers\HookHandler;
+use PixlMint\CMS\Anchors\InitAnchor;
 use PixlMint\CMS\Bootstrap\ConfigurationMerger;
 
 class CmsCore
@@ -12,6 +14,7 @@ class CmsCore
     public static function init(): void
     {
         $config = self::loadConfig();
+        HookHandler::getInstance()->registerAnchor(InitAnchor::getName(), new InitAnchor());
         Core::getInstance()->run($config);
     }
 
