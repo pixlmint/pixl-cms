@@ -62,10 +62,24 @@ return [
         "function" => "login"
     ],
     [
-        // TODO Postman
-        "route" => "/api/change-password",
+        "route" => "/api/auth/change-password",
         "controller" => AuthenticationController::class,
-        "function" => "changePassword"
+        "function" => "changePassword",
+    ],
+    [
+        "route" => "/api/auth/request-new-password",
+        "controller" => AuthenticationController::class,
+        "function" => "requestNewPassword",
+    ],
+    [
+        "route" => "/api/auth/restore-password",
+        "controller" => AuthenticationController::class,
+        "function" => "restorePassword",
+    ],
+    [
+        "route" => "/api/auth/generate-new-token",
+        "controller" => AuthenticationController::class,
+        "function" => "generateNewToken",
     ],
     [
         "route" => "/api/auth/create-admin",

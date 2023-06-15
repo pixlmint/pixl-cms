@@ -49,7 +49,7 @@ class AuthenticationController extends AbstractController
         RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
 
         if (!$user->getEmail()) {
-            return $this->json(['This user has no E-Mail Address'], 400);
+            return $this->json(['message' => 'This user has no E-Mail Address'], 400);
         }
 
         $message = "Click <a href='" . $_SERVER['SERVER_NAME'] . '/auth/restore-password?token=' . $resetLink . "'>here</a> to set a new Password";
@@ -66,15 +66,23 @@ class AuthenticationController extends AbstractController
         }
 
         $username = $_REQUEST['username'];
-        $token = $_REQUEST['token'];
+        $resetToken = $_REQUEST['resetToken'];
         $password1 = $_REQUEST['password1'];
         $password2 = $_REQUEST['password2'];
 
         /** @var TokenUser $user */
         $user = $this->nacho->userHandler->findUser($username);
 
-        if ($password1 !== $password2 || !$user || $token !== $user->getResetLink() || $user->getResetLink() === '') {
-            return $this->json([], 400);
+        if (!$user) {
+            return $this->json(['message' => "Unable to find user with username $username"], 404);
+        }
+
+        if ($password1 !== $password2) {
+            return $this->json(['message' => 'The provided passwords don\'t match'], 400);
+        }
+
+        if ($resetToken !== $user->getResetLink() || $user->getResetLink() === '') {
+            return $this->json(['message' => 'Invalid Reset token'], 400);
         }
 
         /** @var TokenUser $user */
