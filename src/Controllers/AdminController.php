@@ -4,10 +4,10 @@ namespace PixlMint\CMS\Controllers;
 
 use PixlMint\CMS\Actions\RenameAction;
 use PixlMint\CMS\Helpers\ContentHelper;
+use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\TokenHelper;
 use PixlMint\CMS\Helpers\BackupHelper;
 use PixlMint\CMS\Helpers\CacheHelper;
-use PixlMint\CMS\Security\JsonUserHandler;
 use Nacho\Controllers\AbstractController;
 use Nacho\Models\HttpMethod;
 use Nacho\Models\HttpResponseCode;
@@ -59,10 +59,9 @@ class AdminController extends AbstractController
 
     public function addFolder(): string
     {
-        $token = $_REQUEST['token'];
         $parentFolder = $_REQUEST['parentFolder'];
         $folderName = $_REQUEST['folderName'];
-        if (!$this->isGranted(JsonUserHandler::ROLE_EDITOR)) {
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
@@ -90,6 +89,7 @@ class AdminController extends AbstractController
 
     function rename(Request $request)
     {
+        // TODO This shouldn't just change the title but also the entry ID
         if (!key_exists('entry', $_GET) || !key_exists('new-title', $_GET) || !key_exists('token', $_GET)) {
             return $this->json(['message' => 'Please define entry and content'], HttpResponseCode::BAD_REQUEST);
         }

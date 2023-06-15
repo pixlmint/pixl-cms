@@ -1,27 +1,16 @@
 <?php
 
-use PixlMint\CMS\Controllers\AdminController;
 use PixlMint\CMS\Controllers\AuthenticationController;
-use PixlMint\CMS\Controllers\HomeController;
+use PixlMint\CMS\Controllers\AdminController;
 use PixlMint\CMS\Controllers\InitController;
 use PixlMint\CMS\Controllers\UsersController;
 use PixlMint\CMS\Controllers\ViewPageController;
 
 return [
     [
-        "route" => "/",
-        "controller" => HomeController::class,
-        "function" => "index",
-    ],
-    [
         "route" => "/api/entry/view",
         "controller" => ViewPageController::class,
         "function" => "loadEntry",
-    ],
-    [
-        "route" => "/api/nav",
-        "controller" => HomeController::class,
-        "function" => "loadNav"
     ],
     [
         "route" => "/api/admin/entry/rename",
@@ -54,12 +43,14 @@ return [
         "function" => "delete"
     ],
     [
+        // TODO Postman
         "route" => "/api/admin/users/list",
         "min_role" => "Editor",
         "controller" => UsersController::class,
         "function" => "list"
     ],
     [
+        // TODO Postman
         "route" => "/api/admin/users/add",
         "min_role" => "Editor",
         "controller" => UsersController::class,
@@ -71,6 +62,7 @@ return [
         "function" => "login"
     ],
     [
+        // TODO Postman
         "route" => "/api/change-password",
         "controller" => AuthenticationController::class,
         "function" => "changePassword"

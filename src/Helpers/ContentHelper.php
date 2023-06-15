@@ -32,7 +32,7 @@ class ContentHelper
         $meta->time = date('h:i:s');
         $newPage->meta = $meta;
 
-        $contentDir = WikiConfiguration::contentDir();
+        $contentDir = CMSConfiguration::contentDir();
 
         $parentDir = preg_replace('/index.md$/', '', $parentFolder);
         if ($isFolder) {
@@ -59,8 +59,8 @@ class ContentHelper
 
     public function delete(string $entry): bool
     {
-        if (is_dir(WikiConfiguration::contentDir() . $entry)) {
-            return $this->deleteFolder(WikiConfiguration::contentDir() . $entry);
+        if (is_dir(CMSConfiguration::contentDir() . $entry)) {
+            return $this->deleteFolder(CMSConfiguration::contentDir() . $entry);
         } else {
             return $this->deleteFile($entry);
         }

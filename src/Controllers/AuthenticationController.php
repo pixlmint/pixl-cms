@@ -1,6 +1,6 @@
 <?php
 
-namespace PixlCMS\Controllers;
+namespace PixlMint\CMS\Controllers;
 
 use PixlMint\CMS\Helpers\AdminHelper;
 use PixlMint\CMS\Models\TokenUser;
