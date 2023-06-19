@@ -3,10 +3,16 @@
 use PixlMint\CMS\Controllers\AuthenticationController;
 use PixlMint\CMS\Controllers\AdminController;
 use PixlMint\CMS\Controllers\InitController;
+use PixlMint\CMS\Controllers\NotFoundController;
 use PixlMint\CMS\Controllers\UsersController;
 use PixlMint\CMS\Controllers\ViewPageController;
 
 return [
+    [
+        "route" => '/',
+        "controller" => NotFoundController::class,
+        "function" => "index",
+    ],
     [
         "route" => "/api/entry/view",
         "controller" => ViewPageController::class,

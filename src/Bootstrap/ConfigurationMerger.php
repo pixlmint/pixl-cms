@@ -40,7 +40,11 @@ class ConfigurationMerger
                 } elseif ($key === 'routes') {
                     $this->routes = array_merge($this->routes, $tmpConf);
                 } else {
-                    $this->config[$key] = $tmpConf;
+                    if (key_exists($key, $this->config)) {
+                        $this->config[$key] = array_merge($this->config[$key], $tmpConf);
+                    } else {
+                        $this->config[$key] = $tmpConf;
+                    }
                 }
             }
         }

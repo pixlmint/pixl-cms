@@ -2,7 +2,8 @@
 
 namespace PixlMint\CMS\Hooks;
 
-use PixlMint\CMS\Controllers\FrontendController;
+use Nacho\Exceptions\ConfigurationDoesNotExistException;
+use Nacho\Helpers\ConfigurationHelper;
 use Nacho\Contracts\Hooks\PostFindRoute;
 use Nacho\Hooks\AbstractHook;
 use Nacho\Models\Route;
@@ -17,7 +18,7 @@ class RouteCheckHook extends AbstractHook implements PostFindRoute
         if (!str_starts_with($route->getPath(), 'api')) {
             $newRoute = [
                 'route' => $route->getPath(),
-                'controller' => FrontendController::class,
+                'controller' => $this->getFrontendController(),
                 'function' => 'index',
             ];
 
@@ -25,5 +26,15 @@ class RouteCheckHook extends AbstractHook implements PostFindRoute
         }
 
         return $route;
+    }
+
+    private function getFrontendController(): string
+    {
+        $baseConfig = ConfigurationHelper::getInstance()->getCustomConfig('base');
+        if (!key_exists('frontendController', $baseConfig)) {
+            throw new ConfigurationDoesNotExistException('Please define frontendController!');
+        }
+
+        return $baseConfig['frontendController'];
     }
 }
