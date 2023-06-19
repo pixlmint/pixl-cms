@@ -57,7 +57,7 @@ return [
         "function" => "add"
     ],
     [
-        "route" => "/api/login",
+        "route" => "/api/auth/login",
         "controller" => AuthenticationController::class,
         "function" => "login"
     ],
