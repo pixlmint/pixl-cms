@@ -21,6 +21,16 @@ class TokenHelper
         return md5($tokenStamp . $secret);
     }
 
+    public static function getTokenFromRequest(): string|null
+    {
+        $key = 'HTTP_PIXLTOKEN';
+        if (key_exists($key, $_SERVER)) {
+            return $_SERVER[$key];
+        }
+
+        return null;
+    }
+
     public function isTokenValid($token, $users): bool
     {
         try {

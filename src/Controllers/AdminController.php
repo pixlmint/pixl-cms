@@ -28,18 +28,12 @@ class AdminController extends AbstractController
      * GET:  fetch the markdown for a file
      * POST: save edited file
      */
-    function edit(Request $request)
+    function edit(Request $request): string
     {
-        if (!key_exists('token', $_GET)) {
-            return $this->json(['message' => 'You need to be authenticated'], 401);
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        $tokenHelper = new TokenHelper();
-        $token = $_GET['token'];
-        $user = $tokenHelper->isTokenValid($token, $this->nacho->getUserHandler()->getUsers());
-        if (!$user) {
-            return $this->json(['message' => 'The provided Token is invalid'], 401);
-        }
-        $strPage = $_GET['entry'];
+        $strPage = $request->getBody()['entry'];
         $page = $this->nacho->getMarkdownHelper()->getPage($strPage);
 
         if (!$page || !is_file($page->file)) {
@@ -47,9 +41,7 @@ class AdminController extends AbstractController
         }
 
         if (strtoupper($request->requestMethod) === HttpMethod::PUT) {
-            $this->nacho->getMarkdownHelper()->editPage($page->id, $_GET['content'], []);
-            $cacheHelper = new CacheHelper($this->nacho);
-            $cacheHelper->build();
+            $this->nacho->getMarkdownHelper()->editPage($page->id, $request->getBody()['content'], []);
 
             return $this->json(['message' => 'successfully saved content', 'file' => $page->file]);
         }
@@ -75,22 +67,26 @@ class AdminController extends AbstractController
         return $this->delete($request);
     }
 
-    function add()
+    function add(): string
     {
-        $token = $_REQUEST['token'];
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
+        }
         $title = $_REQUEST['title'];
         $parentFolder = $_REQUEST['parentFolder'];
-        // TODO: token check?
 
         $success = $this->contentHelper->create($parentFolder, $title);
 
         return $this->json(['success' => $success]);
     }
 
-    function rename(Request $request)
+    // TODO This shouldn't just change the title but also the entry ID
+    function rename(Request $request): string
     {
-        // TODO This shouldn't just change the title but also the entry ID
-        if (!key_exists('entry', $_GET) || !key_exists('new-title', $_GET) || !key_exists('token', $_GET)) {
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
+        }
+        if (!key_exists('entry', $_GET) || !key_exists('new-title', $_GET)) {
             return $this->json(['message' => 'Please define entry and content'], HttpResponseCode::BAD_REQUEST);
         }
         if (strtoupper($request->requestMethod) !== HttpMethod::PUT) {
@@ -105,14 +101,8 @@ class AdminController extends AbstractController
 
     public function delete(): string
     {
-        if (!key_exists('token', $_REQUEST)) {
-            return $this->json(['message' => 'You need to be authenticated'], 401);
-        }
-        $tokenHelper = new TokenHelper();
-        $token = $_REQUEST['token'];
-        $user = $tokenHelper->isTokenValid($token, $this->nacho->getUserHandler()->getUsers());
-        if (!$user) {
-            return $this->json(['message' => 'The provided Token is invalid'], 401);
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
         }
         if (!key_exists('entry', $_GET)) {
             return $this->json($_GET, 400);
@@ -129,32 +119,10 @@ class AdminController extends AbstractController
         }
     }
 
-    public function buildCache()
+    public function generateBackup(): string
     {
-        if (!key_exists('token', $_REQUEST)) {
-            return $this->json(['message' => 'You need to be authenticated'], 401);
-        }
-        $tokenHelper = new TokenHelper();
-        $token = $_REQUEST['token'];
-        $user = $tokenHelper->isTokenValid($token, $this->nacho->getUserHandler()->getUsers());
-        if (!$user) {
-            return $this->json(['message' => 'The provided Token is invalid'], 401);
-        }
-        $cacheHelper = new CacheHelper($this->nacho);
-        $cacheHelper->build();
-        return $this->json(['success' => true]);
-    }
-
-    public function generateBackup()
-    {
-        if (!key_exists('token', $_REQUEST)) {
-            return $this->json(['message' => 'You need to be authenticated'], 401);
-        }
-        $tokenHelper = new TokenHelper();
-        $token = $_REQUEST['token'];
-        $user = $tokenHelper->isTokenValid($token, $this->nacho->getUserHandler()->getUsers());
-        if (!$user) {
-            return $this->json(['message' => 'The provided Token is invalid'], 401);
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
         $backupHelper = new BackupHelper();
@@ -163,16 +131,10 @@ class AdminController extends AbstractController
         return $this->json(['file' => $zip]);
     }
 
-    public function restoreFromBackup(Request $request)
+    public function restoreFromBackup(Request $request): string
     {
-        if (!key_exists('token', $request->getBody())) {
-            return $this->json(['message' => 'You need to be authenticated'], 401);
-        }
-        $tokenHelper = new TokenHelper();
-        $token = $request->getBody()['token'];
-        $user = $tokenHelper->isTokenValid($token, $this->nacho->getUserHandler()->getUsers());
-        if (!$user) {
-            return $this->json(['message' => 'The provided Token is invalid'], 401);
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
         $zipPath = $_FILES['backup']['tmp_name'];

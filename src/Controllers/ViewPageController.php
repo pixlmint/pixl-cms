@@ -1,14 +1,10 @@
 <?php
 
-
 namespace PixlMint\CMS\Controllers;
 
 use Nacho\Controllers\AbstractController;
 use Nacho\Models\HttpResponseCode;
 
-/**
- * Class WikiController
- */
 class ViewPageController extends AbstractController
 {
     // /api/entry/view

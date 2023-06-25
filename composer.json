@@ -2,8 +2,7 @@
     "name": "pixlmint/pixl-cms",
     "description": "A lightweight CMS powered by Markdown and Nachos",
     "require": {
-        "ext-json":  "*",
-        "pixlmint/nacho": "*"
+        "ext-json":  "*"
     },
     "autoload": {
         "psr-4": {

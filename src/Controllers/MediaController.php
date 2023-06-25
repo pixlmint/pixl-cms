@@ -2,8 +2,10 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use Nacho\Models\Request;
 use PixlMint\CMS\Contracts\MediaProcessor;
-use PixlMint\CMS\Helpers\WikiConfiguration;
+use PixlMint\CMS\Helpers\CMSConfiguration;
+use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\Media\EntryMediaLoader;
 use PixlMint\CMS\Helpers\Media\ImageMediaType;
 use PixlMint\CMS\Helpers\Media\MediaFactory;
@@ -11,9 +13,7 @@ use PixlMint\CMS\Helpers\Media\MimeHelper;
 use PixlMint\CMS\Helpers\Media\VideoMediaType;
 use PixlMint\CMS\Models\MediaDirectory;
 use PixlMint\CMS\Models\Mime;
-use PixlMint\CMS\Helpers\TokenHelper;
 use Nacho\Controllers\AbstractController;
-use Nacho\Models\Request;
 use Nacho\Nacho;
 
 class MediaController extends AbstractController
@@ -29,24 +29,18 @@ class MediaController extends AbstractController
     }
 
     /**
-     * GET: /api/entry/gallery/upload
+     * GET: /api/admin/entry/gallery/upload
      */
-    public function uploadMedia(Request $request)
+    public function uploadMedia(): string
     {
-        if (!key_exists('token', $_REQUEST)) {
-            return $this->json(['message' => 'You need to be authenticated'], 401);
-        }
-        $tokenHelper = new TokenHelper();
-        $token = $_REQUEST['token'];
-        $user = $tokenHelper->isTokenValid($token, $this->nacho->getUserHandler()->getUsers());
-        if (!$user) {
-            return $this->json(['message' => 'The provided Token is invalid'], 401);
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
         }
         if (!key_exists('entry', $_REQUEST)) {
             return $this->json(['message' => 'Please define the Entry'], 400);
         }
 
-        $mediaDir = WikiConfiguration::mediaDir();
+        $mediaDir = CMSConfiguration::mediaDir();
         $entry = $_REQUEST['entry'];
         $month = explode('/', $entry)[1];
         $day = explode('/', $entry)[2];
@@ -70,15 +64,10 @@ class MediaController extends AbstractController
     }
 
     // /api/admin/entry/media/load
-    public function loadMediaForEntry(Request $request): string
+    public function loadMediaForEntry(): string
     {
-        if (!key_exists('token', $_REQUEST)) {
-            return $this->json(['message' => 'You need to be authenticated'], 401);
-        }
-        $tokenHelper = new TokenHelper();
-        $user = $tokenHelper->isTokenValid($_REQUEST['token'], $this->nacho->getUserHandler()->getUsers());
-        if (!$user) {
-            return $this->json(['message' => 'The provided Token is invalid'], 401);
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
         $media = [];
@@ -94,19 +83,13 @@ class MediaController extends AbstractController
     }
 
     // /api/admin/entry/media/delete
-    public function deleteMedia()
+    public function deleteMedia(Request $request): string
     {
-        if (!key_exists('token', $_REQUEST)) {
-            return $this->json(['message' => 'You need to be authenticated'], 401);
-        }
-        $tokenHelper = new TokenHelper();
-        $token = $_REQUEST['token'];
-        $user = $tokenHelper->isTokenValid($token, $this->nacho->getUserHandler()->getUsers());
-        if (!$user) {
-            return $this->json(['message' => 'The provided Token is invalid'], 401);
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
-        $img = $_GET['media'];
+        $img = $request->getBody()['media'];
 
         $media = MediaFactory::run($img, $this->mediaHelpers);
         $delete = [];
