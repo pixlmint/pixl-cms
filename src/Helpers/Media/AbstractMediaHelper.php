@@ -2,7 +2,7 @@
 
 namespace PixlMint\CMS\Helpers\Media;
 
-use PixlMint\CMS\Helpers\WikiConfiguration;
+use PixlMint\CMS\Helpers\CMSConfiguration;
 use PixlMint\CMS\Models\Media;
 use PixlMint\CMS\Models\MediaDirectory;
 use PixlMint\CMS\Models\Mime;
@@ -45,7 +45,7 @@ abstract class AbstractMediaHelper
 
     public function loadMedia(MediaDirectory $directory): array
     {
-        $mediaDir = WikiConfiguration::mediaDir();
+        $mediaDir = CMSConfiguration::mediaDir();
         $media = [];
         $dir = $directory->printDirectory();
         foreach (scandir("${mediaDir}/${dir}") as $file) {
