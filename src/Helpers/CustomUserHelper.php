@@ -36,7 +36,7 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
         return parent::isGranted($minRight, $user);
     }
 
-    public function setPassword(string $username, string $newPassword)
+    public function setPassword(string $username, string $newPassword): UserInterface
     {
         /** @var TokenUser $user */
         $user = $this->findUser($username);

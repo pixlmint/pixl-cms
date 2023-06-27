@@ -2,6 +2,8 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use Nacho\Exceptions\PasswordInvalidException;
+use Nacho\Models\HttpMethod;
 use PixlMint\CMS\Helpers\AdminHelper;
 use PixlMint\CMS\Models\TokenUser;
 use PixlMint\CMS\Helpers\TokenHelper;
@@ -12,11 +14,11 @@ use Nacho\Security\UserRepository;
 
 class AuthenticationController extends AbstractController
 {
-    public function login($request)
+    public function login(Request $request): string
     {
         $tokenHelper = new TokenHelper();
-        $username = $_REQUEST['username'];
-        $password = $_REQUEST['password'];
+        $username = $request->getBody()['username'];
+        $password = $request->getBody()['password'];
         if (strtolower($request->requestMethod) === 'post') {
             $user = $this->nacho->userHandler->findUser($username);
             if ($this->nacho->userHandler->passwordVerify($user, $password)) {
@@ -30,7 +32,7 @@ class AuthenticationController extends AbstractController
         return $this->json([], 405);
     }
 
-    public function requestNewPassword($request)
+    public function requestNewPassword(Request $request): string
     {
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
@@ -59,7 +61,7 @@ class AuthenticationController extends AbstractController
         return $this->json(['success' => $success]);
     }
 
-    public function restorePassword($request)
+    public function restorePassword(Request $request): string
     {
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
@@ -97,13 +99,13 @@ class AuthenticationController extends AbstractController
         return $this->json(['token' => $token]);
     }
 
-    public function generateNewToken($request)
+    public function generateNewToken(Request $request): string
     {
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
         }
         $username = $_REQUEST['username'];
-        $token = $_REQUEST['token'];
+        $token = TokenHelper::getTokenFromRequest();
         if (!$username || !$token) {
             return $this->json(['message' => 'Define Token and Username'], 400);
         }
@@ -122,23 +124,20 @@ class AuthenticationController extends AbstractController
         return $this->json(['token' => $newToken]);
     }
 
-    public function changePassword($request)
+    public function changePassword(): string
     {
-        if (strtolower($request->requestMethod) !== 'post') {
-            return $this->json([], 405);
-        }
-
+        print_r($_REQUEST);
         /** @var TokenUser $user */
         $user = $this->nacho->userHandler->findUser($_REQUEST['username']);
 
-        if (!password_verify($_REQUEST['currentPassword'], $user->getPassword())) {
-            return $this->json(['message' => 'Invalid Password'], 400);
-        }
-
         if ($_REQUEST['newPassword1'] !== $_REQUEST['newPassword2']) {
             return $this->json(['message' => 'The Passwords have to match'], 400);
-        } else {
-            $this->nacho->userHandler->changePassword($user['username'], $_REQUEST['currentPassword'], $_REQUEST['newPassword1']);
+        }
+
+        try {
+            $this->nacho->userHandler->changePassword($user->getUsername(), $_REQUEST['currentPassword'], $_REQUEST['newPassword1']);
+        } catch (PasswordInvalidException $e) {
+            return $this->json(['message' => 'Invalid Password'], 400);
         }
 
         $tokenHelper = new TokenHelper();
@@ -147,10 +146,12 @@ class AuthenticationController extends AbstractController
 
         RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
 
+        print($newToken);
+
         return $this->json(['token' => $newToken]);
     }
 
-    public function createAdmin(Request $request)
+    public function createAdmin(Request $request): string
     {
         if (AdminHelper::isAdminCreated()) {
             return $this->json(['message' => 'An Admin already exists'], 400);

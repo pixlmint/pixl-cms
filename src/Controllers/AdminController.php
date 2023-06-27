@@ -5,14 +5,13 @@ namespace PixlMint\CMS\Controllers;
 use PixlMint\CMS\Actions\RenameAction;
 use PixlMint\CMS\Helpers\ContentHelper;
 use PixlMint\CMS\Helpers\CustomUserHelper;
-use PixlMint\CMS\Helpers\TokenHelper;
 use PixlMint\CMS\Helpers\BackupHelper;
-use PixlMint\CMS\Helpers\CacheHelper;
 use Nacho\Controllers\AbstractController;
 use Nacho\Models\HttpMethod;
 use Nacho\Models\HttpResponseCode;
 use Nacho\Models\Request;
 use Nacho\Nacho;
+use PixlMint\JournalPlugin\Helpers\CacheHelper;
 
 class AdminController extends AbstractController
 {
