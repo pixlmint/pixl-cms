@@ -48,6 +48,9 @@ abstract class AbstractMediaHelper
         $mediaDir = CMSConfiguration::mediaDir();
         $media = [];
         $dir = $directory->printDirectory();
+        if (!is_dir("${mediaDir}/${dir}")) {
+            return $media;
+        }
         foreach (scandir("${mediaDir}/${dir}") as $file) {
             if ($file === '.' || $file === '..' || is_dir("${mediaDir}/${dir}/${file}")) {
                 continue;
