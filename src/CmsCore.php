@@ -14,10 +14,14 @@ class CmsCore
 
     public static function init(): void
     {
-        error_reporting(E_ERROR | E_PARSE);
-        set_exception_handler([new CustomExceptionHandler(), 'handleException']);
         $config = self::loadConfig();
         HookHandler::getInstance()->registerAnchor(InitAnchor::getName(), new InitAnchor());
+
+        if (!$config['base']['debugEnabled']) {
+            error_reporting(E_ERROR | E_PARSE);
+            set_exception_handler([new CustomExceptionHandler(), 'handleException']);
+        }
+
         Core::getInstance()->run($config);
     }
 

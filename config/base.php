@@ -5,4 +5,5 @@ return [
     'contentDir' => $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'content',
     'mediaBaseUrl' => DIRECTORY_SEPARATOR . 'media',
     'version' => 0.1,
+    'debugEnabled' => false,
 ];
