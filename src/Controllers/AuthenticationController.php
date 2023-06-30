@@ -126,7 +126,6 @@ class AuthenticationController extends AbstractController
 
     public function changePassword(): string
     {
-        print_r($_REQUEST);
         /** @var TokenUser $user */
         $user = $this->nacho->userHandler->findUser($_REQUEST['username']);
 
@@ -145,8 +144,6 @@ class AuthenticationController extends AbstractController
         $newToken = $tokenHelper->getToken($user);
 
         RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
-
-        print($newToken);
 
         return $this->json(['token' => $newToken]);
     }
