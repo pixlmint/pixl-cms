@@ -40,7 +40,9 @@ class AdminController extends AbstractController
         }
 
         if (strtoupper($request->requestMethod) === HttpMethod::PUT) {
-            $this->nacho->getMarkdownHelper()->editPage($page->id, $request->getBody()['content'], []);
+            $content = urldecode($request->getBody()['content']);
+            $content = str_replace('&#039', '\'', $content);
+            $this->nacho->getMarkdownHelper()->editPage($page->id, $content, []);
 
             return $this->json(['message' => 'successfully saved content', 'file' => $page->file]);
         }
