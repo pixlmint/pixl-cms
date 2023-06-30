@@ -100,16 +100,16 @@ class AdminController extends AbstractController
         return $this->json(['success' => $success]);
     }
 
-    public function delete(): string
+    public function delete(Request $request): string
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $_GET)) {
-            return $this->json($_GET, 400);
+        if (!key_exists('entry', $request->getBody())) {
+            return $this->json(['message' => 'Please define the entry to delete'], 400);
         }
 
-        $entry = $_GET['entry'];
+        $entry = $request->getBody()['entry'];
 
         $success = $this->contentHelper->delete($entry);
 
