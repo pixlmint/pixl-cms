@@ -15,7 +15,7 @@ class RouteCheckHook extends AbstractHook implements PostFindRoute
 {
     public function call(Route $route): Route
     {
-        if (!str_starts_with($route->getPath(), 'api')) {
+        if (!str_starts_with($route->getPath(), 'api') && self::frontendControllerExists()) {
             $newRoute = [
                 'route' => $route->getPath(),
                 'controller' => $this->getFrontendController(),
@@ -31,10 +31,14 @@ class RouteCheckHook extends AbstractHook implements PostFindRoute
     private function getFrontendController(): string
     {
         $baseConfig = ConfigurationHelper::getInstance()->getCustomConfig('base');
-        if (!key_exists('frontendController', $baseConfig)) {
-            throw new ConfigurationDoesNotExistException('Please define frontendController!');
-        }
 
         return $baseConfig['frontendController'];
+    }
+
+    private static function frontendControllerExists(): bool
+    {
+        $baseConfig = ConfigurationHelper::getInstance()->getCustomConfig('base');
+
+        return key_exists('frontendController', $baseConfig);
     }
 }
