@@ -86,18 +86,14 @@ As PixlCMS is built with the [Nacho Framework](https://github.com/pixlmint/Nacho
 ### Setting a custom Frontend Controller
 The Frontend Controller is the Controller that handles all routes that don't point to an actual file (like an image/ video), and that don't start with `/api`. 
 
-**Type:** `string`
-
-**Default:** `None`
-
-**Config:** `base > frontendController`
+- **Type:** `string`
+- **Default:** `None`
+- **Config:** `base > frontendController`
 
 ### Enable debug mode
 Debug mode makes it easier to develop plugins by printing out full PHP errors
 
-**Type:** `boolean`
-
-**Default:** `false`
-
-**config:** `base > debugEnabled`
+- **Type:** `boolean`
+- **Default:** `false`
+- **config:** `base > debugEnabled`
 
