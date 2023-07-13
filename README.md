@@ -21,7 +21,6 @@ Then create a `index.php` file at the root of your website:
 require __DIR__ . '/vendor/autoload.php';
 
 use PixlMint\CMS\CmsCore;
-</IfModule>
 
 CmsCore::init();
 ```
@@ -36,6 +35,7 @@ And I recommend adding the following `.haccess` file in the root of your project
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule .? index.php [L]
+</IfModule>
 
 # Prevent file browsing
 Options -Indexes -MultiViews
