@@ -105,7 +105,7 @@ class AuthenticationController extends AbstractController
             return $this->json([], 405);
         }
         $username = $_REQUEST['username'];
-        $token = TokenHelper::getTokenFromRequest();
+        $token = TokenHelper::getPossibleTokenFromRequest();
         if (!$username || !$token) {
             return $this->json(['message' => 'Define Token and Username'], 400);
         }
