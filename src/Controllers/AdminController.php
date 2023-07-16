@@ -40,14 +40,19 @@ class AdminController extends AbstractController
         }
 
         if (strtoupper($request->requestMethod) === HttpMethod::PUT) {
-            $content = urldecode($request->getBody()['content']);
-            $content = str_replace('&#039', '\'', $content);
-            $this->nacho->getMarkdownHelper()->editPage($page->id, $content, []);
+            $meta = [];
+            if (key_exists('meta', $request->getBody())) {
+                $meta = $request->getBody()['meta'];
+            }
+            $now = new \DateTime();
+            $meta['lastEdited'] = $now->format('Y-m-d H:i:s');
+            $content = $request->getBody()['content'];
+            $this->nacho->getMarkdownHelper()->editPage($page->id, $content, $meta);
 
             return $this->json(['message' => 'successfully saved content', 'file' => $page->file]);
         }
 
-        return $this->json((array) $page);
+        return $this->json((array)$page);
     }
 
     public function addFolder(): string

@@ -41,7 +41,7 @@ class InitController extends AbstractController
 
     private function isTokenValid(): string
     {
-        if (!TokenHelper::getTokenFromRequest() || $this->isTokenNull()) {
+        if (!TokenHelper::getPossibleTokenFromRequest()) {
             return self::NO_TOKEN_SET;
         }
 
@@ -49,17 +49,10 @@ class InitController extends AbstractController
 
         $users = $this->nacho->userHandler->getUsers();
 
-        if ($tokenHelper->isTokenValid(TokenHelper::getTokenFromRequest(), $users)) {
+        if ($tokenHelper->isTokenValid(TokenHelper::getPossibleTokenFromRequest(), $users)) {
             return self::TOKEN_VALID;
         }
 
         return self::TOKEN_INVALID;
-    }
-
-    private function isTokenNull(): bool
-    {
-        $token = TokenHelper::getTokenFromRequest();
-
-        return $token === null || $token === 'null' || $token === 'undefined';
     }
 }

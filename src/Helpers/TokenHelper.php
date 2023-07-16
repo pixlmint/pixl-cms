@@ -21,6 +21,19 @@ class TokenHelper
         return md5($tokenStamp . $secret);
     }
 
+    /**
+     * Any token that isn't null, false, undefined, or other impossible tokens
+     */
+    public static function getPossibleTokenFromRequest(): string|null
+    {
+        $unsafeToken = self::getTokenFromRequest();
+        if (self::isTokenPossible($unsafeToken)) {
+            return null;
+        }
+
+        return $unsafeToken;
+    }
+
     public static function getTokenFromRequest(): string|null
     {
         $key = 'HTTP_PIXLTOKEN';
@@ -57,5 +70,15 @@ class TokenHelper
         $strTokenStamp = random_bytes(100) . time();
 
         $user->setTokenStamp(sha1($strTokenStamp));
+    }
+
+    private static function isTokenPossible(?string $token): bool
+    {
+        if ($token) {
+            $token = strtolower($token);
+        } else {
+            return false;
+        }
+        return $token === 'null' || $token === 'undefined' || $token === 'false';
     }
 }
