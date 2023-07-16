@@ -60,6 +60,11 @@ return [
         "function" => "delete"
     ],
     [
+        "route" => "/api/admin/entry/change-security",
+        "controller" => AdminController::class,
+        "function" => "changePageSecurity",
+    ],
+    [
         "route" => "/api/auth/login",
         "controller" => AuthenticationController::class,
         "function" => "login"

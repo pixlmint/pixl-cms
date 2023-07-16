@@ -2,6 +2,7 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use Nacho\Helpers\MarkdownHelper;
 use PixlMint\CMS\Actions\RenameAction;
 use PixlMint\CMS\Helpers\ContentHelper;
 use PixlMint\CMS\Helpers\CustomUserHelper;
@@ -53,6 +54,33 @@ class AdminController extends AbstractController
         }
 
         return $this->json((array)$page);
+    }
+
+    public function changePageSecurity(Request $request): string
+    {
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
+        }
+        if (!key_exists('entry', $request->getBody()) || !key_exists('new_state', $request->getBody())) {
+            return $this->json(['message' => 'Please define entry and new_state'], 400);
+        }
+
+        $pageId = $request->getBody()['entry'];
+        $newState = $request->getBody()['new_state'];
+
+        $page = $this->nacho->getMarkdownHelper()->getPage($pageId);
+
+        if (!$page) {
+            return $this->json(['message' => 'Unable to find this page'], 404);
+        }
+
+        $content = $page->raw_content;
+        $meta = $page->meta;
+        $meta->security = $newState;
+
+        $success = $this->nacho->getMarkdownHelper()->editPage($pageId, $content, (array) $meta);
+
+        return $this->json(['success' => $success]);
     }
 
     public function addFolder(): string
