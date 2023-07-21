@@ -120,7 +120,7 @@ class AdminController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $_GET) || !key_exists('new-title', $_GET)) {
+        if (!key_exists('entry', $request->getBody()) || !key_exists('new-title', $request->getBody())) {
             return $this->json(['message' => 'Please define entry and content'], HttpResponseCode::BAD_REQUEST);
         }
         if (strtoupper($request->requestMethod) !== HttpMethod::PUT) {
@@ -128,7 +128,7 @@ class AdminController extends AbstractController
         }
 
         RenameAction::setMarkdownHelper($this->nacho->getMarkdownHelper());
-        $success = RenameAction::run($_GET);
+        $success = RenameAction::run($request->getBody());
 
         return $this->json(['success' => $success]);
     }
