@@ -11,9 +11,9 @@ class BackupHelper
     public function __construct()
     {
         $this->toBackup = [
-            'content' => $_SERVER['DOCUMENT_ROOT'] . '/content',
-            'media' => $_SERVER['DOCUMENT_ROOT'] . '/media',
-            'data' => $_SERVER['DOCUMENT_ROOT'] . '/data',
+            'content' => CMSConfiguration::contentDir(),
+            'media' => CMSConfiguration::mediaDir(),
+            'data' => CMSConfiguration::dataDir(),
         ];
     }
 
