@@ -26,6 +26,11 @@ class CMSConfiguration
         return self::getConfigValue('contentDir');
     }
 
+    public static function dataDir(): string
+    {
+        return $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'data';
+    }
+
     private static function getConfigValue(string $confName): mixed
     {
         return ConfigurationHelper::getInstance()->getCustomConfig('base')[$confName];
