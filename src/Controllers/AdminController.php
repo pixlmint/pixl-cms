@@ -2,9 +2,8 @@
 
 namespace PixlMint\CMS\Controllers;
 
-use Nacho\Helpers\MarkdownHelper;
+use Nacho\Helpers\PageManager;
 use PixlMint\CMS\Actions\RenameAction;
-use PixlMint\CMS\Helpers\ContentHelper;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\BackupHelper;
 use Nacho\Controllers\AbstractController;
@@ -16,12 +15,12 @@ use PixlMint\JournalPlugin\Helpers\CacheHelper;
 
 class AdminController extends AbstractController
 {
-    private ContentHelper $contentHelper;
+    private PageManager $pageManager;
 
     public function __construct(Nacho $nacho)
     {
         parent::__construct($nacho);
-        $this->contentHelper = new ContentHelper($nacho->getMarkdownHelper());
+        $this->pageManager = $nacho->getPageManager();
     }
 
     /**
@@ -34,7 +33,7 @@ class AdminController extends AbstractController
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
         $strPage = $request->getBody()['entry'];
-        $page = $this->nacho->getMarkdownHelper()->getPage($strPage);
+        $page = $this->pageManager->getPage($strPage);
 
         if (!$page || !is_file($page->file)) {
             return $this->json(['message' => 'Unable to find this file']);
@@ -48,7 +47,7 @@ class AdminController extends AbstractController
             $now = new \DateTime();
             $meta['lastEdited'] = $now->format('Y-m-d H:i:s');
             $content = $request->getBody()['content'];
-            $this->nacho->getMarkdownHelper()->editPage($page->id, $content, $meta);
+            $this->pageManager->editPage($page->id, $content, $meta);
 
             return $this->json(['message' => 'successfully saved content', 'file' => $page->file]);
         }
@@ -68,7 +67,7 @@ class AdminController extends AbstractController
         $pageId = $request->getBody()['entry'];
         $newState = $request->getBody()['new_state'];
 
-        $page = $this->nacho->getMarkdownHelper()->getPage($pageId);
+        $page = $this->pageManager->getPage($pageId);
 
         if (!$page) {
             return $this->json(['message' => 'Unable to find this page'], 404);
@@ -78,7 +77,7 @@ class AdminController extends AbstractController
         $meta = $page->meta;
         $meta->security = $newState;
 
-        $success = $this->nacho->getMarkdownHelper()->editPage($pageId, $content, (array) $meta);
+        $success = $this->pageManager->editPage($pageId, $content, (array) $meta);
 
         return $this->json(['success' => $success]);
     }
@@ -91,7 +90,7 @@ class AdminController extends AbstractController
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
-        $success = $this->contentHelper->create($parentFolder, $folderName, true);
+        $success = $this->pageManager->create($parentFolder, $folderName, true);
 
         return $this->json(['success' => $success]);
     }
@@ -109,7 +108,7 @@ class AdminController extends AbstractController
         $title = $_REQUEST['title'];
         $parentFolder = $_REQUEST['parentFolder'];
 
-        $success = $this->contentHelper->create($parentFolder, $title);
+        $success = $this->pageManager->create($parentFolder, $title);
 
         return $this->json(['success' => $success]);
     }
@@ -127,7 +126,7 @@ class AdminController extends AbstractController
             return $this->json(['message' => 'Only PUT allowed'], HttpResponseCode::METHOD_NOT_ALLOWED);
         }
 
-        RenameAction::setMarkdownHelper($this->nacho->getMarkdownHelper());
+        RenameAction::setPageManager($this->pageManager);
         $success = RenameAction::run($request->getBody());
 
         return $this->json(['success' => $success]);
@@ -144,7 +143,7 @@ class AdminController extends AbstractController
 
         $entry = $request->getBody()['entry'];
 
-        $success = $this->contentHelper->delete($entry);
+        $success = $this->pageManager->delete($entry);
 
         if ($success) {
             return $this->json(['message' => "successfully deleted ${entry}"]);

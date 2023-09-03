@@ -1,5 +1,6 @@
 <?php
 
+use PixlMint\CMS\Controllers\AlternateContentController;
 use PixlMint\CMS\Controllers\AuthenticationController;
 use PixlMint\CMS\Controllers\AdminController;
 use PixlMint\CMS\Controllers\InitController;
@@ -58,6 +59,11 @@ return [
         "route" => "/api/admin/entry/delete",
         "controller" => AdminController::class,
         "function" => "delete"
+    ],
+    [
+        "route" => "/api/admin/entry/update-alternate-content",
+        "controller" => AlternateContentController::class,
+        "function" => "update",
     ],
     [
         "route" => "/api/admin/entry/change-security",

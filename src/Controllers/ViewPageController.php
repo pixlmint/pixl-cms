@@ -12,14 +12,13 @@ class ViewPageController extends AbstractController
     {
         $url = $_REQUEST['p'];
         $url = str_replace('%20', ' ', $url);
-        $page = $this->nacho->getMarkdownHelper()->getPage($url);
+        $page = $this->nacho->getPageManager()->getPage($url);
         if (is_null($page)) {
             return $this->json(['message' => 'Unable to find Entry ' . $url], HttpResponseCode::NOT_FOUND);
         }
-        $content = $this->nacho->getMarkdownHelper()->renderPage($page);
-        $ret = ['content' => $content];
-        $ret = array_merge($ret, (array)$page);
+        $content = $this->nacho->getPageManager()->renderPage($page);
+        $page->content = $content;
 
-        return $this->json($ret);
+        return $this->json((array)$page);
     }
 }
