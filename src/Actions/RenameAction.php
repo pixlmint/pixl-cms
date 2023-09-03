@@ -2,16 +2,16 @@
 
 namespace PixlMint\CMS\Actions;
 
-use Nacho\Helpers\MarkdownHelper;
+use Nacho\Helpers\PageManager;
 use PixlMint\CMS\Contracts\ActionInterface;
 
 class RenameAction implements ActionInterface
 {
-    private static MarkdownHelper $markdownHelper;
+    private static PageManager $pageManager;
 
-    public static function setMarkdownHelper(MarkdownHelper $markdownHelper): void
+    public static function setPageManager(PageManager $pageManager): void
     {
-        self::$markdownHelper = $markdownHelper;
+        self::$pageManager = $pageManager;
     }
 
     public static function run(array $arguments): bool
@@ -19,8 +19,8 @@ class RenameAction implements ActionInterface
         $newName = $arguments['new-title'];
         $entry = $arguments['entry'];
 
-        self::$markdownHelper->editPage($entry, '', ['title' => $newName]);
-        $page = self::$markdownHelper->getPage($entry);
+        self::$pageManager->editPage($entry, '', ['title' => $newName]);
+        $page = self::$pageManager->getPage($entry);
         $splPath = explode(DIRECTORY_SEPARATOR, $page->file);
         $filename = array_pop($splPath);
 
