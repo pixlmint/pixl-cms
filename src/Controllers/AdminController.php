@@ -92,7 +92,7 @@ class AdminController extends AbstractController
 
         $success = $this->pageManager->create($parentFolder, $folderName, true);
 
-        return $this->json(['success' => $success]);
+        return $this->json(['success' => $success !== null]);
     }
 
     public function deleteFolder(Request $request): string
@@ -110,7 +110,7 @@ class AdminController extends AbstractController
 
         $success = $this->pageManager->create($parentFolder, $title);
 
-        return $this->json(['success' => $success]);
+        return $this->json(['success' => $success !== null]);
     }
 
     // TODO This shouldn't just change the title but also the entry ID
