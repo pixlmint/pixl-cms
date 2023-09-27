@@ -1,10 +1,9 @@
 <?php
 
+use PixlMint\CMS\Controllers\AdminController;
 use PixlMint\CMS\Controllers\AlternativeContentController;
 use PixlMint\CMS\Controllers\AuthenticationController;
-use PixlMint\CMS\Controllers\AdminController;
 use PixlMint\CMS\Controllers\InitController;
-use PixlMint\CMS\Controllers\MediaController;
 use PixlMint\CMS\Controllers\NotFoundController;
 use PixlMint\CMS\Controllers\UsersController;
 use PixlMint\CMS\Controllers\ViewPageController;
@@ -104,24 +103,6 @@ return [
         "route" => "/api/auth/create-admin",
         "controller" => AuthenticationController::class,
         "function" => 'createAdmin',
-    ],
-    [
-        // TODO: postman
-        'route' => '/api/admin/entry/gallery/upload',
-        'controller' => MediaController::class,
-        'function' => 'uploadMedia',
-    ],
-    [
-        // TODO: postman
-        'route' => '/api/admin/entry/media/load',
-        'controller' => MediaController::class,
-        'function' => 'loadMediaForEntry',
-    ],
-    [
-        // TODO: postman
-        'route' => '/api/admin/entry/media/delete',
-        'controller' => MediaController::class,
-        'function' => 'deleteMedia',
     ],
     [
         "route" => "/api/init",
