@@ -25,16 +25,23 @@ use PixlMint\CMS\CmsCore;
 CmsCore::init();
 ```
 
-And I recommend adding the following `.haccess` file in the root of your project:
+Here is a basic `.htaccess` configuration for hosting your site using Apache
 ```apacheconf
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    RewriteRule ^(src|.vscode|content|node_modules|CHANGELOG\.md|.secret|users.json|composer\.(json|lock|phar))(/|$) index.php
-    # Enable URL rewriting
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule .? index.php [L]
+    # Allow access to these directories and specific files
+    RewriteCond %{REQUEST_URI} ^/media/.* [OR]
+    RewriteCond %{REQUEST_URI} ^/dist/.* [OR]
+    RewriteCond %{REQUEST_URI} ^/public/.* [OR]
+    RewriteCond %{REQUEST_URI} ^/backup/.* [OR]
+    RewriteCond %{REQUEST_URI} ^/favicon\.ico [OR]
+    RewriteCond %{REQUEST_URI} ^/robots\.txt [OR]
+    RewriteCond %{REQUEST_URI} ^/manifest\.webmanifest
+    # If any of the above conditions are met, do nothing and exit
+    RewriteRule ^ - [L]
+
+    RewriteRule ^.*$ index.php [L]
 </IfModule>
 
 # Prevent file browsing
@@ -49,14 +56,17 @@ View the full API documentation here: [PixlCms Documentation](https://documenter
 ## Plugins
 Plugins are a great way to extend the functionality of the base CMS to your specific needs. 
 
-I am actively developing 2 plugins right now, one for journaling, and one for running a wiki
-
 ### First Party Plugins
 #### pixl-wiki
 [PixlMint Wiki GitHub Page](https://github.com/pixlmint/pixlcms-wiki-plugin)
 
 #### pixl-journal
 [PixlMint Journal GitHub Page](https://github.com/pixlmint/pixlcms-journal-plugin)
+
+#### pixl-media
+A powerful Plugin that adds routes for media upload (images and videos) and automatically scales them
+
+[PixlMint Media Plugin GitHub Page](https://github.com/pixlmint/pixlcms-media-plugin)
 
 ### Configuration
 *name*
@@ -77,11 +87,23 @@ Whether the plugin is enabled. Defaults to `true`. If it's set to `false`, the c
 
 The Plugin configuration - the best practice is to just `require_once` the plugins config.php file.
 
+#### Example Configuration
+```php
+...
+[
+    'name' => 'pixlcms-journal-plugin',
+    'install_method' => 'composer',
+    'enabled' => true,
+    'config' => require_once('vendor/pixlmint/pixlcms-journal-plugin/config/config.php'),
+]
+...
+```
+
 ### Plugin Development
 The best way to start developing plugins is to take a look at one of my first-party plugins.
 
-## Configuration
-As PixlCMS is built with the [Nacho Framework](https://github.com/pixlmint/Nacho) so for full configuration info look at the Nacho Wiki
+## CMS Configuration
+Since PixlCMS is built with the [Nacho Framework](https://github.com/pixlmint/Nacho) so for full configuration info look at the Nacho Wiki
 
 ### Setting a custom Frontend Controller
 The Frontend Controller is the Controller that handles all routes that don't point to an actual file (like an image/ video), and that don't start with `/api`. 
