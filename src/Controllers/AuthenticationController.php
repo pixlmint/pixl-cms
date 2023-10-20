@@ -161,8 +161,8 @@ class AuthenticationController extends AbstractController
         $username = $_REQUEST['username'];
         $password = $_REQUEST['password'];
 
-        $user = new TokenUser(0, $username, 'Editor', null, null, null, null);
-        $guest = new TokenUser(0, 'Guest', 'Guest', null, null, null, null);
+        $user = new TokenUser(0, $username, 'Editor', null, null, null, null, null, null);
+        $guest = new TokenUser(0, 'Guest', 'Guest', null, null, null, null, null, null);
 
         $tokenHelper = new TokenHelper();
 
