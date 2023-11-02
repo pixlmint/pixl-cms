@@ -62,7 +62,7 @@ class AuthenticationController extends AbstractController
         return $this->json(['success' => $success]);
     }
 
-    public function restorePassword(Request $request): string
+    public function restorePassword(Request $request): HttpResponse
     {
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
@@ -100,7 +100,7 @@ class AuthenticationController extends AbstractController
         return $this->json(['token' => $token]);
     }
 
-    public function generateNewToken(Request $request): string
+    public function generateNewToken(Request $request): HttpResponse
     {
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
@@ -125,7 +125,7 @@ class AuthenticationController extends AbstractController
         return $this->json(['token' => $newToken]);
     }
 
-    public function changePassword(): string
+    public function changePassword(): HttpResponse
     {
         /** @var TokenUser $user */
         $user = $this->nacho->userHandler->findUser($_REQUEST['username']);
@@ -149,7 +149,7 @@ class AuthenticationController extends AbstractController
         return $this->json(['token' => $newToken]);
     }
 
-    public function createAdmin(Request $request): string
+    public function createAdmin(Request $request): HttpResponse
     {
         if (AdminHelper::isAdminCreated()) {
             return $this->json(['message' => 'An Admin already exists'], 400);
