@@ -3,12 +3,13 @@
 namespace PixlMint\CMS\Controllers;
 
 use Nacho\Controllers\AbstractController;
+use Nacho\Models\HttpResponse;
 use Nacho\Models\HttpResponseCode;
 
 class ViewPageController extends AbstractController
 {
     // /api/entry/view
-    public function loadEntry(): string
+    public function loadEntry(): HttpResponse
     {
         $url = $_REQUEST['p'];
         $url = str_replace('%20', ' ', $url);

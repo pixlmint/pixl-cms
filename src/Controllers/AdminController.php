@@ -3,6 +3,7 @@
 namespace PixlMint\CMS\Controllers;
 
 use Nacho\Helpers\PageManager;
+use Nacho\Models\HttpResponse;
 use PixlMint\CMS\Actions\RenameAction;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\BackupHelper;
@@ -27,7 +28,7 @@ class AdminController extends AbstractController
      * GET:  fetch the markdown for a file
      * POST: save edited file
      */
-    function edit(Request $request): string
+    function edit(Request $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -55,7 +56,7 @@ class AdminController extends AbstractController
         return $this->json((array)$page);
     }
 
-    public function changePageSecurity(Request $request): string
+    public function changePageSecurity(Request $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -82,7 +83,7 @@ class AdminController extends AbstractController
         return $this->json(['success' => $success]);
     }
 
-    public function addFolder(): string
+    public function addFolder(): HttpResponse
     {
         $parentFolder = $_REQUEST['parentFolder'];
         $folderName = $_REQUEST['folderName'];
@@ -100,7 +101,7 @@ class AdminController extends AbstractController
         return $this->delete($request);
     }
 
-    function add(): string
+    function add(): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -114,7 +115,7 @@ class AdminController extends AbstractController
     }
 
     // TODO This shouldn't just change the title but also the entry ID
-    function rename(Request $request): string
+    function rename(Request $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -132,7 +133,7 @@ class AdminController extends AbstractController
         return $this->json(['success' => $success]);
     }
 
-    public function delete(Request $request): string
+    public function delete(Request $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -152,7 +153,7 @@ class AdminController extends AbstractController
         }
     }
 
-    public function generateBackup(): string
+    public function generateBackup(): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -164,7 +165,7 @@ class AdminController extends AbstractController
         return $this->json(['file' => $zip]);
     }
 
-    public function restoreFromBackup(Request $request): string
+    public function restoreFromBackup(Request $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);

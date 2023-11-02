@@ -3,6 +3,7 @@
 namespace PixlMint\CMS\Controllers;
 
 use Nacho\Helpers\HookHandler;
+use Nacho\Models\HttpResponse;
 use Nacho\Nacho;
 use PixlMint\CMS\Anchors\InitAnchor;
 use PixlMint\CMS\Helpers\CMSConfiguration;
@@ -15,7 +16,7 @@ class InitController extends AbstractController
     const TOKEN_VALID = 'token_valid';
     const TOKEN_INVALID = 'token_invalid';
 
-    public function init(): string
+    public function init(): HttpResponse
     {
         $isTokenValid = $this->isTokenValid();
         $isAdminCreated = $this->isAdminCreated();
