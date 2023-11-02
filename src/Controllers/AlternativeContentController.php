@@ -3,12 +3,13 @@
 namespace PixlMint\CMS\Controllers;
 
 use Nacho\Controllers\AbstractController;
+use Nacho\Models\HttpResponse;
 use Nacho\Models\Request;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 
 class AlternativeContentController extends AbstractController
 {
-    public function update(Request $request): string
+    public function update(Request $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -21,7 +22,7 @@ class AlternativeContentController extends AbstractController
         return $this->json(['success' => $success]);
     }
 
-    public function upload(Request $request): string
+    public function upload(Request $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);

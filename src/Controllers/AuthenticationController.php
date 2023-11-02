@@ -4,6 +4,7 @@ namespace PixlMint\CMS\Controllers;
 
 use Nacho\Exceptions\PasswordInvalidException;
 use Nacho\Models\HttpMethod;
+use Nacho\Models\HttpResponse;
 use PixlMint\CMS\Helpers\AdminHelper;
 use PixlMint\CMS\Models\TokenUser;
 use PixlMint\CMS\Helpers\TokenHelper;
@@ -14,7 +15,7 @@ use Nacho\Security\UserRepository;
 
 class AuthenticationController extends AbstractController
 {
-    public function login(Request $request): string
+    public function login(Request $request): HttpResponse
     {
         $tokenHelper = new TokenHelper();
         $username = $request->getBody()['username'];
@@ -32,7 +33,7 @@ class AuthenticationController extends AbstractController
         return $this->json([], 405);
     }
 
-    public function requestNewPassword(Request $request): string
+    public function requestNewPassword(Request $request): HttpResponse
     {
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
