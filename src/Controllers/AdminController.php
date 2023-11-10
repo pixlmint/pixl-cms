@@ -2,6 +2,8 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use Nacho\Contracts\PageManagerInterface;
+use Nacho\Contracts\RequestInterface;
 use Nacho\Helpers\PageManager;
 use Nacho\Models\HttpResponse;
 use PixlMint\CMS\Actions\RenameAction;
@@ -18,10 +20,10 @@ class AdminController extends AbstractController
 {
     private PageManager $pageManager;
 
-    public function __construct(Nacho $nacho)
+    public function __construct(PageManagerInterface $pageManager)
     {
-        parent::__construct($nacho);
-        $this->pageManager = $nacho->getPageManager();
+        parent::__construct();
+        $this->pageManager = $pageManager;
     }
 
     /**
@@ -56,7 +58,7 @@ class AdminController extends AbstractController
         return $this->json((array)$page);
     }
 
-    public function changePageSecurity(Request $request): HttpResponse
+    public function changePageSecurity(RequestInterface $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -96,7 +98,7 @@ class AdminController extends AbstractController
         return $this->json(['success' => $success !== null]);
     }
 
-    public function deleteFolder(Request $request): string
+    public function deleteFolder(RequestInterface $request): string
     {
         return $this->delete($request);
     }
@@ -115,7 +117,7 @@ class AdminController extends AbstractController
     }
 
     // TODO This shouldn't just change the title but also the entry ID
-    function rename(Request $request): HttpResponse
+    function rename(RequestInterface $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -133,7 +135,7 @@ class AdminController extends AbstractController
         return $this->json(['success' => $success]);
     }
 
-    public function delete(Request $request): HttpResponse
+    public function delete(RequestInterface $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -165,7 +167,7 @@ class AdminController extends AbstractController
         return $this->json(['file' => $zip]);
     }
 
-    public function restoreFromBackup(Request $request): HttpResponse
+    public function restoreFromBackup(): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);

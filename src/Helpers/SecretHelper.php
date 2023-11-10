@@ -9,48 +9,45 @@ use PixlMint\CMS\Repository\SecretRepository;
 
 class SecretHelper
 {
-    private static ?string $secret = null;
-    private static RepositoryInterface $secretRepository;
+    private ?string $secret = null;
+    private RepositoryInterface $secretRepository;
 
-    public static function getSecret(): string
+    public function __construct(SecretRepository $secretRepository)
     {
-        if (!self::$secret) {
+
+        $this->secretRepository = $secretRepository;
+    }
+
+    public function getSecret(): string
+    {
+        if (!$this->secret) {
             self::readSecret();
         }
 
-        return self::$secret;
+        return $this->secret;
     }
 
-    public static function setSecret(string $secret): void
+    public function setSecret(string $secret): void
     {
-        self::initRepo();
         $secretObj = new Secret(1, $secret);
-        self::$secretRepository->set($secretObj);
-        self::$secret = $secret;
+        $this->secretRepository->set($secretObj);
+        $this->secret = $secret;
     }
 
-    private static function readSecret(): void
+    private function readSecret(): void
     {
-        self::initRepo();
         /** @var Secret $secretObj */
-        $secretObj = self::$secretRepository->getById(1);
+        $secretObj = $this->secretRepository->getById(1);
         if (!$secretObj) {
-            self::generateNewSecret();
+            $this->generateNewSecret();
             return;
         }
 
-        self::$secret = $secretObj->getSecret();
+        $this->secret = $secretObj->getSecret();
     }
 
-    protected static function generateNewSecret(): void
+    protected function generateNewSecret(): void
     {
-        static::setSecret(md5(bin2hex(random_bytes(256))));
-    }
-
-    private static function initRepo(): void
-    {
-        if (!isset(self::$secretRepository)) {
-            self::$secretRepository = RepositoryManager::getInstance()->getRepository(SecretRepository::class);
-        }
+        $this->setSecret(md5(bin2hex(random_bytes(256))));
     }
 }

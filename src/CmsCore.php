@@ -2,30 +2,43 @@
 
 namespace PixlMint\CMS;
 
-use Nacho\Core;
+use DI\ContainerBuilder;
+use Nacho\Contracts\UserHandlerInterface;
+use Nacho\Models\ContainerDefinitionsHolder;
+use Nacho\Nacho;
 use Nacho\Helpers\HookHandler;
 use PixlMint\CMS\Anchors\InitAnchor;
 use PixlMint\CMS\Bootstrap\ConfigurationMerger;
 use PixlMint\CMS\Helpers\CustomExceptionHandler;
+use PixlMint\CMS\Helpers\CustomUserHelper;
+use function DI\create;
 
 class CmsCore
 {
     private static array $plugins = [];
 
-    public static function init(): void
+    public function init($config = []): void
     {
-        $config = self::loadConfig();
-        HookHandler::getInstance()->registerAnchor(InitAnchor::getName(), new InitAnchor());
+        if (!$config) {
+            $config = self::loadConfig();
+        }
 
         if (!$config['base']['debugEnabled']) {
             error_reporting(E_ERROR | E_PARSE);
             set_exception_handler([new CustomExceptionHandler(), 'handleException']);
         }
+        $core = new Nacho();
+        $containerBuilder = $core->getContainerBuilder();
+        $containerBuilder->addDefinitions($this->getContainerDefinitions());
 
-        Core::getInstance()->run($config);
+        $core->init($containerBuilder);
+
+        Nacho::$container->get(HookHandler::class)->registerAnchor(InitAnchor::getName(), new InitAnchor());
+
+        $core->run($config);
     }
 
-    private static function loadConfig(): array
+    private function loadConfig(): array
     {
         $cmsConfig = require_once(self::getCMSDirectory() . 'config' . DIRECTORY_SEPARATOR . 'config.php');
         $siteConfig = require_once('config/config.php');
@@ -41,7 +54,7 @@ class CmsCore
         return $configMerger->merge();
     }
 
-    private static function loadPluginsConfig(): array
+    private function loadPluginsConfig(): array
     {
         $ret = [];
         foreach (self::$plugins as $plugin) {
@@ -53,12 +66,12 @@ class CmsCore
         return $ret;
     }
 
-    private static function isPluginEnabled(array $plugin): bool
+    private function isPluginEnabled(array $plugin): bool
     {
         return (key_exists('enabled', $plugin) && $plugin['enabled']) || !key_exists('enabled', $plugin);
     }
 
-    private static function getCMSDirectory(): string
+    private function getCMSDirectory(): string
     {
         $cmsDirectory = getenv('CMS_DIR');
         if ($cmsDirectory) {
@@ -66,5 +79,12 @@ class CmsCore
         } else {
             return 'vendor/pixlmint/pixl-cms/';
         }
+    }
+
+    private function getContainerDefinitions(): ContainerDefinitionsHolder
+    {
+        return new ContainerDefinitionsHolder(2, [
+            UserHandlerInterface::class => create(CustomUserHelper::class),
+        ]);
     }
 }
