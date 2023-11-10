@@ -2,12 +2,11 @@
 
 namespace PixlMint\CMS\Helpers;
 
+use Nacho\ORM\ModelInterface;
 use PixlMint\CMS\Models\TokenUser;
-use Nacho\ORM\RepositoryManager;
 use Nacho\Security\JsonUserHandler;
 use Nacho\Contracts\UserHandlerInterface;
 use Nacho\Security\UserInterface;
-use Nacho\Security\UserRepository;
 
 final class CustomUserHelper extends JsonUserHandler implements UserHandlerInterface
 {
@@ -16,7 +15,7 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
     const ROLE_READER = 'Reader';
     const ROLE_GUEST = 'Guest';
 
-    public function getCurrentUser()
+    public function getCurrentUser(): ModelInterface|UserInterface
     {
         if (!key_exists('HTTP_PIXLTOKEN', $_SERVER)) {
             return new TokenUser(0, 'Guest', self::ROLE_GUEST, null, null, null, null, null, null);
@@ -49,7 +48,7 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
     {
         $passwordHash = password_hash(SecretHelper::getSecret() . $newPassword, PASSWORD_DEFAULT);
         $user->setPassword($passwordHash);
-        RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
+        $this->userRepository->set($user);
 
         return $user;
     }

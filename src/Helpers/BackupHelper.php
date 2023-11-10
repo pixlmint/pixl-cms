@@ -48,7 +48,7 @@ class BackupHelper
         return $success;
     }
 
-    private static function clearDirectory(string $dir)
+    private static function clearDirectory(string $dir): void
     {
         foreach (scandir($dir) as $path) {
             if ($path !== '.' && $path !== '..') {
@@ -57,7 +57,7 @@ class BackupHelper
         }
     }
 
-    private static function rmdir_recursive(string $dir)
+    private static function rmdir_recursive(string $dir): void
     {
         if (is_dir($dir)) {
             $objects = scandir($dir);
@@ -140,7 +140,7 @@ class BackupHelper
     }
 
     // In case of coping a directory inside itself, there is a need to hash check the directory otherwise and infinite loop of coping is generated
-    private static function hashDirectory($directory)
+    private static function hashDirectory($directory): bool|string
     {
         if (!is_dir($directory)) {
             return false;
