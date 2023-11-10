@@ -15,15 +15,18 @@ use function DI\create;
 
 class CmsCore
 {
-    private static array $plugins = [];
+    private array $plugins = [];
+    private array $config = [];
 
     public function init($config = []): void
     {
         if (!$config) {
-            $config = self::loadConfig();
+            $this->config = self::loadConfig();
+        } else {
+            $this->config = $config;
         }
 
-        if (!$config['base']['debugEnabled']) {
+        if (!$this->config['base']['debugEnabled']) {
             error_reporting(E_ERROR | E_PARSE);
             set_exception_handler([new CustomExceptionHandler(), 'handleException']);
         }
@@ -35,7 +38,7 @@ class CmsCore
 
         Nacho::$container->get(HookHandler::class)->registerAnchor(InitAnchor::getName(), new InitAnchor());
 
-        $core->run($config);
+        $core->run($this->config);
     }
 
     private function loadConfig(): array
@@ -44,7 +47,7 @@ class CmsCore
         $siteConfig = require_once('config/config.php');
 
         if (key_exists('plugins', $siteConfig)) {
-            self::$plugins = $siteConfig['plugins'];
+            $this->plugins = $siteConfig['plugins'];
         }
 
         $pluginConfig = self::loadPluginsConfig();
@@ -57,8 +60,8 @@ class CmsCore
     private function loadPluginsConfig(): array
     {
         $ret = [];
-        foreach (self::$plugins as $plugin) {
-            if (self::isPluginEnabled($plugin)) {
+        foreach ($this->plugins as $plugin) {
+            if ($this->isPluginEnabled($plugin)) {
                 $ret[$plugin['name']] = $plugin['config'];
             }
         }
@@ -85,6 +88,7 @@ class CmsCore
     {
         return new ContainerDefinitionsHolder(2, [
             UserHandlerInterface::class => create(CustomUserHelper::class),
+            'debug' => $this->config['base']['debugEnabled'],
         ]);
     }
 }
