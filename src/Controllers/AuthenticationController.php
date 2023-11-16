@@ -30,13 +30,12 @@ class AuthenticationController extends AbstractController
 
     public function login(RequestInterface $request): HttpResponse
     {
-        $tokenHelper = new TokenHelper();
         $username = $request->getBody()['username'];
         $password = $request->getBody()['password'];
         if (strtolower($request->requestMethod) === 'post') {
             $user = $this->userHandler->findUser($username);
             if ($this->userHandler->passwordVerify($user, $password)) {
-                $token = $tokenHelper->getToken($user);
+                $token = $this->tokenHelper->getToken($user);
                 return $this->json(['token' => $token]);
             } else {
                 return $this->json(['message' => 'This password/ username is not valid'], 400);
@@ -103,11 +102,10 @@ class AuthenticationController extends AbstractController
 
         /** @var TokenUser $user */
         $user = $this->userHandler->setPasswordForUser($user, $password1);
-        $tokenHelper = new TokenHelper();
 
-        $tokenHelper->generateNewTokenStamp($user);
+        $this->tokenHelper->generateNewTokenStamp($user);
         $user->setResetLink('');
-        $token = $tokenHelper->getToken($user);
+        $token = $this->tokenHelper->getToken($user);
         $this->userRepository->set($user);
 
         return $this->json(['token' => $token]);
@@ -123,16 +121,15 @@ class AuthenticationController extends AbstractController
         if (!$username || !$token) {
             return $this->json(['message' => 'Define Token and Username'], 400);
         }
-        $tokenHelper = new TokenHelper();
-        if (!$tokenHelper->isTokenValid($token, $this->userHandler->getUsers())) {
+        if (!$this->tokenHelper->isTokenValid($token, $this->userHandler->getUsers())) {
             return $this->json([], 400);
         }
 
         /** @var TokenUser $user */
         $user = $this->userHandler->findUser($username);
 
-        $tokenHelper->generateNewTokenStamp($user);
-        $newToken = $tokenHelper->getToken($user);
+        $this->tokenHelper->generateNewTokenStamp($user);
+        $newToken = $this->tokenHelper->getToken($user);
         $this->userRepository->set($user);
 
         return $this->json(['token' => $newToken]);
@@ -177,9 +174,7 @@ class AuthenticationController extends AbstractController
         $user = new TokenUser(0, $username, 'Editor', null, null, null, null, null, null);
         $guest = new TokenUser(0, 'Guest', 'Guest', null, null, null, null, null, null);
 
-        $tokenHelper = new TokenHelper();
-
-        $tokenHelper->generateNewTokenStamp($user);
+        $this->tokenHelper->generateNewTokenStamp($user);
 
         $this->userRepository->set($user);
         $this->userRepository->set($guest);

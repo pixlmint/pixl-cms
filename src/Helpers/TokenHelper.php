@@ -10,12 +10,19 @@ use Nacho\Security\UserInterface;
 
 class TokenHelper
 {
+    private SecretHelper $secretHelper;
+
+    public function __construct(SecretHelper $secretHelper)
+    {
+        $this->secretHelper = $secretHelper;
+    }
+
     public function getToken($user): string
     {
         if ($user instanceof TokenUser) {
             $user = $user->toArray();
         }
-        $secret = SecretHelper::getSecret();
+        $secret = $this->secretHelper->getSecret();
         $tokenStamp = $user['tokenStamp'];
 
         return md5($tokenStamp . $secret);

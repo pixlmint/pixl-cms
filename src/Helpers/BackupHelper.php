@@ -8,12 +8,12 @@ class BackupHelper
 {
     private array $toBackup;
 
-    public function __construct()
+    public function __construct(CMSConfiguration $cmsConfiguration)
     {
         $this->toBackup = [
-            'content' => CMSConfiguration::contentDir(),
-            'media' => CMSConfiguration::mediaDir(),
-            'data' => CMSConfiguration::dataDir(),
+            'content' => $cmsConfiguration->contentDir(),
+            'media' => $cmsConfiguration->mediaDir(),
+            'data' => $cmsConfiguration->dataDir(),
         ];
     }
 
