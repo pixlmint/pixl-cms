@@ -15,6 +15,7 @@ class AlternativeContentController extends AbstractController
 
     public function __construct(PageManager $pageManager)
     {
+        parent::__construct();
         $this->pageManager = $pageManager;
     }
 

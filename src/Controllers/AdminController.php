@@ -18,7 +18,7 @@ use PixlMint\JournalPlugin\Helpers\CacheHelper;
 
 class AdminController extends AbstractController
 {
-    private PageManager $pageManager;
+    private PageManagerInterface $pageManager;
 
     public function __construct(PageManagerInterface $pageManager)
     {
@@ -129,7 +129,6 @@ class AdminController extends AbstractController
             return $this->json(['message' => 'Only PUT allowed'], HttpResponseCode::METHOD_NOT_ALLOWED);
         }
 
-        RenameAction::setPageManager($this->pageManager);
         $success = RenameAction::run($request->getBody());
 
         return $this->json(['success' => $success]);
@@ -167,16 +166,14 @@ class AdminController extends AbstractController
         return $this->json(['file' => $zip]);
     }
 
-    public function restoreFromBackup(): HttpResponse
+    public function restoreFromBackup(BackupHelper $backupHelper, CacheHelper $cacheHelper): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
         $zipPath = $_FILES['backup']['tmp_name'];
-        $backupHelper = new BackupHelper();
         $success = $backupHelper->restoreFromBackup($zipPath);
-        $cacheHelper = new CacheHelper($this->nacho);
         $cacheHelper->build();
 
         return $this->json(['success' => $success]);

@@ -13,6 +13,7 @@ class ViewPageController extends AbstractController
 
     public function __construct(PageManagerInterface $pageManager)
     {
+        parent::__construct();
         $this->pageManager = $pageManager;
     }
 

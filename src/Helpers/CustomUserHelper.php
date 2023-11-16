@@ -14,6 +14,13 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
     const ROLE_EDITOR = 'Editor';
     const ROLE_READER = 'Reader';
     const ROLE_GUEST = 'Guest';
+    private SecretHelper $secretHelper;
+
+    public function __construct(SecretHelper $secretHelper)
+    {
+        parent::__construct();
+        $this->secretHelper = $secretHelper;
+    }
 
     public function getCurrentUser(): ModelInterface|UserInterface
     {
@@ -46,7 +53,7 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
 
     public function setPasswordForUser(TokenUser $user, string $newPassword): TokenUser
     {
-        $passwordHash = password_hash(SecretHelper::getSecret() . $newPassword, PASSWORD_DEFAULT);
+        $passwordHash = password_hash($this->secretHelper->getSecret() . $newPassword, PASSWORD_DEFAULT);
         $user->setPassword($passwordHash);
         $this->userRepository->set($user);
 
@@ -55,7 +62,7 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
 
     public function passwordVerify(UserInterface $user, string $password): bool
     {
-        $secret = SecretHelper::getSecret();
+        $secret = $this->secretHelper->getSecret();
 
         return password_verify($secret . $password, $user->getPassword());
     }
