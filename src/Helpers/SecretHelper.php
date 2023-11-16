@@ -14,7 +14,6 @@ class SecretHelper
 
     public function __construct(SecretRepository $secretRepository)
     {
-
         $this->secretRepository = $secretRepository;
     }
 
