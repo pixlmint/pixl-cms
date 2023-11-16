@@ -2,7 +2,6 @@
 
 namespace PixlMint\CMS;
 
-use DI\ContainerBuilder;
 use Nacho\Contracts\UserHandlerInterface;
 use Nacho\Models\ContainerDefinitionsHolder;
 use Nacho\Nacho;
@@ -14,7 +13,6 @@ use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\SecretHelper;
 use PixlMint\JournalPlugin\Helpers\CacheHelper;
 use function DI\create;
-use function DI\get;
 
 class CmsCore
 {
@@ -90,8 +88,7 @@ class CmsCore
     private function getContainerDefinitions(): ContainerDefinitionsHolder
     {
         return new ContainerDefinitionsHolder(2, [
-            UserHandlerInterface::class => create(CustomUserHelper::class)
-                ->constructor(get(SecretHelper::class)),
+            UserHandlerInterface::class => create(CustomUserHelper::class),
             'debug' => $this->config['base']['debugEnabled'],
             SecretHelper::class => create(SecretHelper::class),
             CacheHelper::class => create(CacheHelper::class),
