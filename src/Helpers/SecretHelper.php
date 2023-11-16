@@ -2,8 +2,8 @@
 
 namespace PixlMint\CMS\Helpers;
 
+use Nacho\Nacho;
 use Nacho\ORM\RepositoryInterface;
-use Nacho\ORM\RepositoryManager;
 use PixlMint\CMS\Models\Secret;
 use PixlMint\CMS\Repository\SecretRepository;
 
@@ -12,9 +12,9 @@ class SecretHelper
     private ?string $secret = null;
     private RepositoryInterface $secretRepository;
 
-    public function __construct(SecretRepository $secretRepository)
+    public function __construct()
     {
-        $this->secretRepository = $secretRepository;
+        $this->secretRepository = Nacho::$container->get(SecretRepository::class);
     }
 
     public function getSecret(): string
