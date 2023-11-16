@@ -2,6 +2,7 @@
 
 namespace PixlMint\CMS\Helpers;
 
+use Nacho\Nacho;
 use Nacho\ORM\ModelInterface;
 use PixlMint\CMS\Models\TokenUser;
 use Nacho\Security\JsonUserHandler;
@@ -16,10 +17,10 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
     const ROLE_GUEST = 'Guest';
     private SecretHelper $secretHelper;
 
-    public function __construct(SecretHelper $secretHelper)
+    public function __construct()
     {
         parent::__construct();
-        $this->secretHelper = $secretHelper;
+        $this->secretHelper = Nacho::$container->get(SecretHelper::class);
     }
 
     public function getCurrentUser(): ModelInterface|UserInterface
