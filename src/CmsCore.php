@@ -89,7 +89,9 @@ class CmsCore
     private function getContainerDefinitions(): ContainerDefinitionsHolder
     {
         return new ContainerDefinitionsHolder(2, [
-            UserHandlerInterface::class => create(CustomUserHelper::class),
+            UserHandlerInterface::class => create(CustomUserHelper::class)->constructor(
+                SecretHelper::class,
+            ),
             'debug' => $this->config['base']['debugEnabled'],
             SecretHelper::class => create(SecretHelper::class),
             CacheHelper::class => create(CacheHelper::class),
