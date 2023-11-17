@@ -27,10 +27,6 @@ class CmsCore
             $this->config = $config;
         }
 
-        if (!$this->config['base']['debugEnabled']) {
-            error_reporting(E_ERROR | E_PARSE);
-            set_exception_handler([new CustomExceptionHandler(), 'handleException']);
-        }
         $core = new Nacho();
         $containerBuilder = $core->getContainerBuilder();
         if (!$this->config['base']['debugEnabled']) {
@@ -39,6 +35,11 @@ class CmsCore
         $containerBuilder->addDefinitions($this->getContainerDefinitions());
 
         $core->init($containerBuilder);
+
+        if (!Nacho::$container->get('debug')) {
+            error_reporting(E_ERROR | E_PARSE);
+            set_exception_handler([new CustomExceptionHandler(), 'handleException']);
+        }
 
         Nacho::$container->get(HookHandler::class)->registerAnchor(InitAnchor::getName(), new InitAnchor());
 
