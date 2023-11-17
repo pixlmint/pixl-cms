@@ -11,7 +11,6 @@ use PixlMint\CMS\Bootstrap\ConfigurationMerger;
 use PixlMint\CMS\Helpers\CustomExceptionHandler;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\SecretHelper;
-use PixlMint\JournalPlugin\Helpers\CacheHelper;
 use function DI\create;
 
 class CmsCore
@@ -95,7 +94,6 @@ class CmsCore
             UserHandlerInterface::class => create(CustomUserHelper::class),
             'debug' => $this->config['base']['debugEnabled'],
             SecretHelper::class => create(SecretHelper::class),
-            CacheHelper::class => create(CacheHelper::class),
         ]);
     }
 }
