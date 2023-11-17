@@ -4,16 +4,14 @@ namespace PixlMint\CMS\Controllers;
 
 use Nacho\Contracts\PageManagerInterface;
 use Nacho\Contracts\RequestInterface;
-use Nacho\Helpers\PageManager;
 use Nacho\Models\HttpResponse;
+use Nacho\Nacho;
 use PixlMint\CMS\Actions\RenameAction;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\BackupHelper;
 use Nacho\Controllers\AbstractController;
 use Nacho\Models\HttpMethod;
 use Nacho\Models\HttpResponseCode;
-use Nacho\Models\Request;
-use Nacho\Nacho;
 use PixlMint\JournalPlugin\Helpers\CacheHelper;
 
 class AdminController extends AbstractController
@@ -30,7 +28,7 @@ class AdminController extends AbstractController
      * GET:  fetch the markdown for a file
      * POST: save edited file
      */
-    function edit(Request $request): HttpResponse
+    function edit(RequestInterface $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -160,7 +158,7 @@ class AdminController extends AbstractController
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
-        $backupHelper = new BackupHelper();
+        $backupHelper = Nacho::$container->get(BackupHelper::class);
         $zip = $backupHelper->generateBackup();
 
         return $this->json(['file' => $zip]);

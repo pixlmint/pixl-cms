@@ -6,7 +6,7 @@ use PixlMint\CMS\Models\Cache;
 use Nacho\ORM\AbstractRepository;
 use Nacho\ORM\RepositoryInterface;
 
-class CacheRepository extends AbstractRepository implements RepositoryInterface
+class CacheRepository extends AbstractRepository
 {
     public static function getDataName(): string
     {

@@ -6,7 +6,7 @@ use Nacho\ORM\AbstractRepository;
 use Nacho\ORM\RepositoryInterface;
 use PixlMint\CMS\Models\Secret;
 
-class SecretRepository extends AbstractRepository implements RepositoryInterface
+class SecretRepository extends AbstractRepository
 {
     public static function getDataName(): string
     {
