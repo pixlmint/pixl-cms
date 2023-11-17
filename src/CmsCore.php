@@ -33,6 +33,9 @@ class CmsCore
         }
         $core = new Nacho();
         $containerBuilder = $core->getContainerBuilder();
+        if (!$this->config['base']['debugEnabled']) {
+            $containerBuilder->enableCompilation('var/cache');
+        }
         $containerBuilder->addDefinitions($this->getContainerDefinitions());
 
         $core->init($containerBuilder);
