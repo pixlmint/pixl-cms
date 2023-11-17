@@ -18,13 +18,15 @@ class InitController extends AbstractController
     private HookHandler $hookHandler;
     private UserHandlerInterface $userHandler;
     private CMSConfiguration $cmsConfiguration;
+    private TokenHelper $tokenHelper;
 
-    public function __construct(HookHandler $hookHandler, UserHandlerInterface $userHandler, CMSConfiguration $cmsConfiguration)
+    public function __construct(HookHandler $hookHandler, UserHandlerInterface $userHandler, CMSConfiguration $cmsConfiguration, TokenHelper $tokenHelper)
     {
         parent::__construct();
         $this->hookHandler = $hookHandler;
         $this->userHandler = $userHandler;
         $this->cmsConfiguration = $cmsConfiguration;
+        $this->tokenHelper = $tokenHelper;
     }
 
     public function init(): HttpResponse
@@ -57,11 +59,9 @@ class InitController extends AbstractController
             return self::NO_TOKEN_SET;
         }
 
-        $tokenHelper = new TokenHelper();
-
         $users = $this->userHandler->getUsers();
 
-        if ($tokenHelper->isTokenValid(TokenHelper::getPossibleTokenFromRequest(), $users)) {
+        if ($this->tokenHelper->isTokenValid(TokenHelper::getPossibleTokenFromRequest(), $users)) {
             return self::TOKEN_VALID;
         }
 
