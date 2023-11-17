@@ -16,11 +16,13 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
     const ROLE_READER = 'Reader';
     const ROLE_GUEST = 'Guest';
     private SecretHelper $secretHelper;
+    private TokenHelper $tokenHelper;
 
     public function __construct()
     {
         parent::__construct();
         $this->secretHelper = Nacho::$container->get(SecretHelper::class);
+        $this->tokenHelper = Nacho::$container->get(TokenHelper::class);
     }
 
     public function getCurrentUser(): ModelInterface|UserInterface
@@ -30,9 +32,8 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
         }
 
         $token = TokenHelper::getPossibleTokenFromRequest();
-        $tokenHelper = new TokenHelper();
 
-        return $tokenHelper->getUserByToken($token, $this->getUsers());
+        return $this->tokenHelper->getUserByToken($token, $this->getUsers());
     }
 
     public function isGranted(string $minRight = self::ROLE_GUEST, ?UserInterface $user = null): bool
