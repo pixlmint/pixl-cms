@@ -2,6 +2,7 @@
 
 namespace PixlMint\CMS\Helpers;
 
+use PixlMint\CMS\Exception\InvalidTokenException;
 use PixlMint\CMS\Models\TokenUser;
 use Nacho\Exceptions\UserDoesNotExistException;
 use Nacho\ORM\ModelInterface;
@@ -56,11 +57,17 @@ class TokenHelper
         try {
             $this->getUserByToken($token, $users);
             return true;
-        } catch (UserDoesNotExistException $e) {
+        } catch (InvalidTokenException $e) {
         }
         return false;
     }
 
+    /**
+     * @param string $token
+     * @param array $users
+     * @return UserInterface|ModelInterface
+     * @throws InvalidTokenException
+     */
     public function getUserByToken(string $token, array $users): UserInterface|ModelInterface
     {
         foreach ($users as $user) {
@@ -69,7 +76,7 @@ class TokenHelper
             }
         }
 
-        throw new UserDoesNotExistException('This User does not exist or the provided token is invalid');
+        throw new InvalidTokenException("No user for the provided token found");
     }
 
     public function generateNewTokenStamp(TokenUser &$user): void

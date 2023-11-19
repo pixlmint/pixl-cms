@@ -4,6 +4,7 @@ namespace PixlMint\CMS\Helpers;
 
 use Nacho\Nacho;
 use Nacho\ORM\ModelInterface;
+use PixlMint\CMS\Exception\InvalidTokenException;
 use PixlMint\CMS\Models\TokenUser;
 use Nacho\Security\JsonUserHandler;
 use Nacho\Contracts\UserHandlerInterface;
@@ -25,7 +26,7 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
         $this->tokenHelper = Nacho::$container->get(TokenHelper::class);
     }
 
-    public function getCurrentUser(): ModelInterface|UserInterface
+    public function getCurrentUser(): ModelInterface|UserInterface|null
     {
         if (!key_exists('HTTP_PIXLTOKEN', $_SERVER)) {
             return new TokenUser(0, 'Guest', self::ROLE_GUEST, null, null, null, null, null, null);
@@ -33,13 +34,20 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
 
         $token = TokenHelper::getPossibleTokenFromRequest();
 
-        return $this->tokenHelper->getUserByToken($token, $this->getUsers());
+        try {
+            return $this->tokenHelper->getUserByToken($token, $this->getUsers());
+        } catch (InvalidTokenException $e) {
+            return null;
+        }
     }
 
     public function isGranted(string $minRight = self::ROLE_GUEST, ?UserInterface $user = null): bool
     {
         if (!$user) {
             $user = $this->getCurrentUser();
+        }
+        if (!$user) {
+            return $minRight === self::ROLE_GUEST;
         }
         return parent::isGranted($minRight, $user);
     }
