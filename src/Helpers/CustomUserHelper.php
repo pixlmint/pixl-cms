@@ -26,10 +26,11 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
         $this->tokenHelper = Nacho::$container->get(TokenHelper::class);
     }
 
-    public function getCurrentUser(): ModelInterface|UserInterface|null
+    public function getCurrentUser(): ModelInterface|UserInterface
     {
+        $guest = new TokenUser(0, 'Guest', self::ROLE_GUEST, null, null, null, null, null, null);
         if (!key_exists('HTTP_PIXLTOKEN', $_SERVER)) {
-            return new TokenUser(0, 'Guest', self::ROLE_GUEST, null, null, null, null, null, null);
+            return $guest;
         }
 
         $token = TokenHelper::getPossibleTokenFromRequest();
@@ -37,7 +38,7 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
         try {
             return $this->tokenHelper->getUserByToken($token, $this->getUsers());
         } catch (InvalidTokenException $e) {
-            return null;
+            return $guest;
         }
     }
 
