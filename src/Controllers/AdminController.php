@@ -81,7 +81,7 @@ class AdminController extends AbstractController
         $md = $page->raw_markdown;
 
         return new HttpResponse($md, 200, [
-            'content-type' => 'text/markdown',
+            'content-type' => 'text/plain',
         ]);
     }
 
