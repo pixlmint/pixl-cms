@@ -75,6 +75,11 @@ return [
         "function" => "changePageSecurity",
     ],
     [
+        "route" => "/api/admin/entry/view-markdown",
+        "controller" => AdminController::class,
+        "function" => "loadMarkdownFile",
+    ],
+    [
         "route" => "/api/auth/login",
         "controller" => AuthenticationController::class,
         "function" => "login"
