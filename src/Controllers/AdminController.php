@@ -12,6 +12,7 @@ use PixlMint\CMS\Helpers\BackupHelper;
 use Nacho\Controllers\AbstractController;
 use Nacho\Models\HttpMethod;
 use Nacho\Models\HttpResponseCode;
+use PixlMint\CMS\Helpers\TokenHelper;
 use PixlMint\JournalPlugin\Helpers\CacheHelper;
 
 class AdminController extends AbstractController
@@ -56,6 +57,34 @@ class AdminController extends AbstractController
         return $this->json((array)$page);
     }
 
+    public function loadMarkdownFile(RequestInterface $request, CustomUserHelper $userHelper, TokenHelper $tokenHelper): HttpResponse
+    {
+        $token = null;
+        $users = $userHelper->getUsers();
+        if (key_exists('token', $request->getBody())) {
+            $token = $request->getBody()['token'];
+        }
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR) && !$tokenHelper->isTokenValid($token, $users)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
+        }
+        if (!key_exists('entry', $request->getBody())) {
+            return $this->json(['message' => 'Please define the entry'], 400);
+        }
+
+        $pageId = $request->getBody()['entry'];
+        $page = $this->pageManager->getPage($pageId);
+
+        if (!$page) {
+            return $this->json(['message' => 'Unable to find this page'], 404);
+        }
+
+        $md = $page->raw_markdown;
+
+        return new HttpResponse($md, 200, [
+            'content-type' => 'text/markdown',
+        ]);
+    }
+
     public function changePageSecurity(RequestInterface $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
@@ -78,7 +107,7 @@ class AdminController extends AbstractController
         $meta = $page->meta;
         $meta->security = $newState;
 
-        $success = $this->pageManager->editPage($pageId, $content, (array) $meta);
+        $success = $this->pageManager->editPage($pageId, $content, (array)$meta);
 
         return $this->json(['success' => $success]);
     }
