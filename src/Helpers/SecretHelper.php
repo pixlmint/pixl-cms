@@ -20,7 +20,7 @@ class SecretHelper
     public function getSecret(): string
     {
         if (!$this->secret) {
-            self::readSecret();
+            $this->readSecret();
         }
 
         return $this->secret;

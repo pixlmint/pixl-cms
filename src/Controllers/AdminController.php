@@ -4,6 +4,7 @@ namespace PixlMint\CMS\Controllers;
 
 use Nacho\Contracts\PageManagerInterface;
 use Nacho\Contracts\RequestInterface;
+use Nacho\Helpers\PicoVersioningHelper;
 use Nacho\Models\HttpResponse;
 use Nacho\Nacho;
 use PixlMint\CMS\Actions\RenameAction;
@@ -27,9 +28,9 @@ class AdminController extends AbstractController
 
     /**
      * GET:  fetch the markdown for a file
-     * POST: save edited file
+     * PUT: save edited file
      */
-    function edit(RequestInterface $request): HttpResponse
+    function edit(RequestInterface $request, PicoVersioningHelper $versioningHelper): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -46,8 +47,16 @@ class AdminController extends AbstractController
             if (key_exists('meta', $request->getBody())) {
                 $meta = $request->getBody()['meta'];
             }
-            $now = new \DateTime();
-            $meta['lastEdited'] = $now->format('Y-m-d H:i:s');
+            if (key_exists('lastUpdate', $request->getBody()) && !$versioningHelper->canUpdateToVersion($page, $request->getBody()['lastUpdate'])) {
+                $lastUpdateTime = $page->meta->dateUpdated;
+                if (is_numeric($lastUpdateTime)) {
+                    $lastUpdateTime = date('Y-m-d H:i:s', $lastUpdateTime);
+                }
+                return $this->json([
+                    'message' => 'This page has already been updated by another client more recently',
+                    'lastUpdate' => $lastUpdateTime,
+                ], HttpResponseCode::CONFLICT);
+            }
             $content = $request->getBody()['content'];
             $this->pageManager->editPage($page->id, $content, $meta);
 
