@@ -2,6 +2,7 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use DateTime;
 use Nacho\Contracts\PageManagerInterface;
 use Nacho\Contracts\RequestInterface;
 use Nacho\Helpers\PicoVersioningHelper;
@@ -35,6 +36,9 @@ class AdminController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
+        if (!key_exists('entry', $request->getBody()) || !key_exists('lastUpdate', $request->getBody()) || !key_exists('content', $request->getBody())) {
+            return $this->json(['message' => 'Please define entry, content and lastUpdate arguments'], HttpResponseCode::BAD_REQUEST);
+        }
         $strPage = $request->getBody()['entry'];
         $page = $this->pageManager->getPage($strPage);
 
@@ -47,11 +51,16 @@ class AdminController extends AbstractController
             if (key_exists('meta', $request->getBody())) {
                 $meta = $request->getBody()['meta'];
             }
-            if (key_exists('lastUpdate', $request->getBody()) && !$versioningHelper->canUpdateToVersion($page, $request->getBody()['lastUpdate'])) {
-                $lastUpdateTime = $page->meta->dateUpdated;
-                if (is_numeric($lastUpdateTime)) {
-                    $lastUpdateTime = date('Y-m-d H:i:s', $lastUpdateTime);
-                }
+            $lastUpdateTime = $page->meta->dateUpdated;
+            if (is_numeric($lastUpdateTime)) {
+                $lastUpdateTime = date('Y-m-d H:i:s', $lastUpdateTime);
+            }
+            if (!$versioningHelper->hasValidUpdateTime($request)) {
+                return $this->json([
+                    'message' => 'Invalid lastUpdate date supplied: ' . $request->getBody()['lastUpdate'],
+                ], HttpResponseCode::BAD_REQUEST);
+            }
+            if (!$versioningHelper->canUpdateToVersion($page, $request->getBody()['lastUpdate'])) {
                 return $this->json([
                     'message' => 'This page has already been updated by another client more recently',
                     'lastUpdate' => $lastUpdateTime,
@@ -60,7 +69,11 @@ class AdminController extends AbstractController
             $content = $request->getBody()['content'];
             $this->pageManager->editPage($page->id, $content, $meta);
 
-            return $this->json(['message' => 'successfully saved content', 'file' => $page->file]);
+            return $this->json([
+                'message' => 'successfully saved content',
+                'file' => $page->file,
+                'lastUpdate' => (new DateTime())->format('Y-m-d H:i:s'),
+            ]);
         }
 
         return $this->json((array)$page);
@@ -134,7 +147,7 @@ class AdminController extends AbstractController
         return $this->json(['success' => $success !== null]);
     }
 
-    public function deleteFolder(RequestInterface $request): string
+    public function deleteFolder(RequestInterface $request): HttpResponse
     {
         return $this->delete($request);
     }
