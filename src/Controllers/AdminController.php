@@ -6,6 +6,7 @@ use DateTime;
 use Nacho\Contracts\PageManagerInterface;
 use Nacho\Contracts\RequestInterface;
 use Nacho\Helpers\PicoVersioningHelper;
+use Nacho\Helpers\Utils;
 use Nacho\Models\HttpResponse;
 use Nacho\Nacho;
 use PixlMint\CMS\Actions\RenameAction;
@@ -38,6 +39,10 @@ class AdminController extends AbstractController
         }
         if (!key_exists('entry', $request->getBody()) || !key_exists('lastUpdate', $request->getBody()) || !key_exists('content', $request->getBody())) {
             return $this->json(['message' => 'Please define entry, content and lastUpdate arguments'], HttpResponseCode::BAD_REQUEST);
+        }
+        $meta = $request->getBody()['meta'];
+        if (Utils::isJson($meta)) {
+            $request->getBody()['meta'] = json_decode($meta);
         }
         $strPage = $request->getBody()['entry'];
         $page = $this->pageManager->getPage($strPage);
