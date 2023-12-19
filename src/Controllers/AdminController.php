@@ -55,6 +55,9 @@ class AdminController extends AbstractController
             $meta = [];
             if (key_exists('meta', $request->getBody())) {
                 $meta = $request->getBody()['meta'];
+                if (Utils::isJson($meta)) {
+                    $meta = json_decode($meta, TRUE);
+                }
             }
             $lastUpdateTime = $page->meta->dateUpdated;
             if (is_numeric($lastUpdateTime)) {
