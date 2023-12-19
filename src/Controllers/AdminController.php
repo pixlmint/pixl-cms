@@ -42,7 +42,7 @@ class AdminController extends AbstractController
         }
         $meta = $request->getBody()['meta'];
         if (Utils::isJson($meta)) {
-            $request->getBody()['meta'] = json_decode($meta);
+            $request->getBody()['meta'] = json_decode($meta, TRUE);
         }
         $strPage = $request->getBody()['entry'];
         $page = $this->pageManager->getPage($strPage);
