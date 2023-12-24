@@ -37,8 +37,11 @@ class AdminController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $request->getBody()) || !key_exists('lastUpdate', $request->getBody()) || !key_exists('content', $request->getBody())) {
-            return $this->json(['message' => 'Please define entry, content and lastUpdate arguments'], HttpResponseCode::BAD_REQUEST);
+        if (!key_exists('entry', $request->getBody())) {
+            return $this->json(['message' => 'Please define the entry'], HttpResponseCode::BAD_REQUEST);
+        }
+        if (strtoupper($request->requestMethod) === HttpMethod::PUT && (!key_exists('lastUpdate', $request->getBody()) || !key_exists('content', $request->getBody()))) {
+            return $this->json(['message' => 'Please define content and lastUpdate arguments'], HttpResponseCode::BAD_REQUEST);
         }
         $meta = $request->getBody()['meta'];
         if (Utils::isJson($meta)) {
@@ -189,6 +192,21 @@ class AdminController extends AbstractController
         $success = RenameAction::run($request->getBody());
 
         return $this->json(['success' => $success]);
+    }
+
+    public function fetchLastChanged(RequestInterface $request): HttpResponse
+    {
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
+        }
+        if (!key_exists('entry', $request->getBody())) {
+            return $this->json(['message' => 'Please define the entry to fetch'], 400);
+        }
+
+        $entryId = $request->getBody()['entry'];
+        $entry = $this->pageManager->getPage($entryId);
+
+        return $this->json(['lastChanged' => $entry->meta->dateUpdated]);
     }
 
     public function delete(RequestInterface $request): HttpResponse
