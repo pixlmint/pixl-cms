@@ -75,6 +75,11 @@ return [
         "function" => "changePageSecurity",
     ],
     [
+        "route" => "/api/admin/entry/fetch-last-changed",
+        "controller" => AdminController::class,
+        "function" => "fetchLastChanged",
+    ],
+    [
         "route" => "/api/admin/entry/view-markdown",
         "controller" => AdminController::class,
         "function" => "loadMarkdownFile",
