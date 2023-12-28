@@ -223,9 +223,9 @@ class AdminController extends AbstractController
         $success = $this->pageManager->delete($entry);
 
         if ($success) {
-            return $this->json(['message' => "successfully deleted ${entry}"]);
+            return $this->json(['message' => "successfully deleted {$entry}"]);
         } else {
-            return $this->json(['message' => "error deleting ${entry}"], 404);
+            return $this->json(['message' => "error deleting {$entry}"], 404);
         }
     }
 
