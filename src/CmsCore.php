@@ -2,36 +2,56 @@
 
 namespace PixlMint\CMS;
 
-use Nacho\Core;
+use Nacho\Contracts\UserHandlerInterface;
+use Nacho\Models\ContainerDefinitionsHolder;
+use Nacho\Nacho;
 use Nacho\Helpers\HookHandler;
 use PixlMint\CMS\Anchors\InitAnchor;
 use PixlMint\CMS\Bootstrap\ConfigurationMerger;
 use PixlMint\CMS\Helpers\CustomExceptionHandler;
+use PixlMint\CMS\Helpers\CustomUserHelper;
+use PixlMint\CMS\Helpers\SecretHelper;
+use function DI\create;
 
 class CmsCore
 {
-    private static array $plugins = [];
+    private array $plugins = [];
+    private array $config = [];
 
-    public static function init(): void
+    public function init($config = []): void
     {
-        $config = self::loadConfig();
-        HookHandler::getInstance()->registerAnchor(InitAnchor::getName(), new InitAnchor());
+        if (!$config) {
+            $this->config = self::loadConfig();
+        } else {
+            $this->config = $config;
+        }
 
-        if (!$config['base']['debugEnabled']) {
+        $core = new Nacho();
+        $containerBuilder = $core->getContainerBuilder();
+        if (!$this->config['base']['debugEnabled']) {
+            $containerBuilder->enableCompilation('var/cache');
+        }
+        $containerBuilder->addDefinitions($this->getContainerDefinitions());
+
+        $core->init($containerBuilder);
+
+        if (!Nacho::$container->get('debug')) {
             error_reporting(E_ERROR | E_PARSE);
             set_exception_handler([new CustomExceptionHandler(), 'handleException']);
         }
 
-        Core::getInstance()->run($config);
+        Nacho::$container->get(HookHandler::class)->registerAnchor(InitAnchor::getName(), new InitAnchor());
+
+        $core->run($this->config);
     }
 
-    private static function loadConfig(): array
+    private function loadConfig(): array
     {
         $cmsConfig = require_once(self::getCMSDirectory() . 'config' . DIRECTORY_SEPARATOR . 'config.php');
         $siteConfig = require_once('config/config.php');
 
         if (key_exists('plugins', $siteConfig)) {
-            self::$plugins = $siteConfig['plugins'];
+            $this->plugins = $siteConfig['plugins'];
         }
 
         $pluginConfig = self::loadPluginsConfig();
@@ -41,11 +61,11 @@ class CmsCore
         return $configMerger->merge();
     }
 
-    private static function loadPluginsConfig(): array
+    private function loadPluginsConfig(): array
     {
         $ret = [];
-        foreach (self::$plugins as $plugin) {
-            if (self::isPluginEnabled($plugin)) {
+        foreach ($this->plugins as $plugin) {
+            if ($this->isPluginEnabled($plugin)) {
                 $ret[$plugin['name']] = $plugin['config'];
             }
         }
@@ -53,12 +73,12 @@ class CmsCore
         return $ret;
     }
 
-    private static function isPluginEnabled(array $plugin): bool
+    private function isPluginEnabled(array $plugin): bool
     {
         return (key_exists('enabled', $plugin) && $plugin['enabled']) || !key_exists('enabled', $plugin);
     }
 
-    private static function getCMSDirectory(): string
+    private function getCMSDirectory(): string
     {
         $cmsDirectory = getenv('CMS_DIR');
         if ($cmsDirectory) {
@@ -66,5 +86,14 @@ class CmsCore
         } else {
             return 'vendor/pixlmint/pixl-cms/';
         }
+    }
+
+    private function getContainerDefinitions(): ContainerDefinitionsHolder
+    {
+        return new ContainerDefinitionsHolder(2, [
+            UserHandlerInterface::class => create(CustomUserHelper::class),
+            'debug' => $this->config['base']['debugEnabled'],
+            SecretHelper::class => create(SecretHelper::class),
+        ]);
     }
 }

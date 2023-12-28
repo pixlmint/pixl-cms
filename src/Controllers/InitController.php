@@ -2,8 +2,9 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use Nacho\Contracts\UserHandlerInterface;
 use Nacho\Helpers\HookHandler;
-use Nacho\Nacho;
+use Nacho\Models\HttpResponse;
 use PixlMint\CMS\Anchors\InitAnchor;
 use PixlMint\CMS\Helpers\CMSConfiguration;
 use PixlMint\CMS\Helpers\TokenHelper;
@@ -14,22 +15,35 @@ class InitController extends AbstractController
     const NO_TOKEN_SET = 'no_token_set';
     const TOKEN_VALID = 'token_valid';
     const TOKEN_INVALID = 'token_invalid';
+    private HookHandler $hookHandler;
+    private UserHandlerInterface $userHandler;
+    private CMSConfiguration $cmsConfiguration;
+    private TokenHelper $tokenHelper;
 
-    public function init(): string
+    public function __construct(HookHandler $hookHandler, UserHandlerInterface $userHandler, CMSConfiguration $cmsConfiguration, TokenHelper $tokenHelper)
+    {
+        parent::__construct();
+        $this->hookHandler = $hookHandler;
+        $this->userHandler = $userHandler;
+        $this->cmsConfiguration = $cmsConfiguration;
+        $this->tokenHelper = $tokenHelper;
+    }
+
+    public function init(): HttpResponse
     {
         $isTokenValid = $this->isTokenValid();
         $isAdminCreated = $this->isAdminCreated();
-        $version = CMSConfiguration::version();
+        $version = $this->cmsConfiguration->version();
 
         $init = ['is_token_valid' => $isTokenValid, 'version' => $version, 'adminCreated' => $isAdminCreated];
-        $init = HookHandler::getInstance()->executeHook(InitAnchor::getName(), ['init' => $init]);
+        $init = $this->hookHandler->executeHook(InitAnchor::getName(), ['init' => $init]);
 
         return $this->json($init);
     }
 
     public function isAdminCreated(): bool
     {
-        $users = $this->nacho->getUserHandler()->getUsers();
+        $users = $this->userHandler->getUsers();
         foreach ($users as $user) {
             if ($user['role'] === 'Editor') {
                 return true;
@@ -45,11 +59,9 @@ class InitController extends AbstractController
             return self::NO_TOKEN_SET;
         }
 
-        $tokenHelper = new TokenHelper();
+        $users = $this->userHandler->getUsers();
 
-        $users = $this->nacho->userHandler->getUsers();
-
-        if ($tokenHelper->isTokenValid(TokenHelper::getPossibleTokenFromRequest(), $users)) {
+        if ($this->tokenHelper->isTokenValid(TokenHelper::getPossibleTokenFromRequest(), $users)) {
             return self::TOKEN_VALID;
         }
 

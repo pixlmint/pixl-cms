@@ -2,37 +2,51 @@
 
 namespace PixlMint\CMS\Helpers;
 
+use Nacho\Nacho;
+use Nacho\ORM\RepositoryInterface;
+use PixlMint\CMS\Models\Secret;
+use PixlMint\CMS\Repository\SecretRepository;
+
 class SecretHelper
 {
-    private static ?string $secret = null;
+    private ?string $secret = null;
+    private RepositoryInterface $secretRepository;
 
-    public static function getSecret(): string
+    public function __construct()
     {
-        if (!self::$secret) {
-            self::readSecret();
-        }
-
-        return self::$secret;
+        $this->secretRepository = Nacho::$container->get(SecretRepository::class);
     }
 
-    public static function setSecret(string $secret): void
+    public function getSecret(): string
     {
-        self::$secret = $secret;
+        if (!$this->secret) {
+            $this->readSecret();
+        }
+
+        return $this->secret;
     }
 
-    private static function readSecret(): void
+    public function setSecret(string $secret): void
     {
-        $secretVar = '';
-        if (is_file('.secret')) {
-            $secretVar = file_get_contents('.secret');
-        } else {
-            $secretVar = getenv('SECRET');
+        $secretObj = new Secret(1, $secret);
+        $this->secretRepository->set($secretObj);
+        $this->secret = $secret;
+    }
+
+    private function readSecret(): void
+    {
+        /** @var Secret $secretObj */
+        $secretObj = $this->secretRepository->getById(1);
+        if (!$secretObj) {
+            $this->generateNewSecret();
+            return;
         }
 
-        if (!$secretVar) {
-            throw new \Exception('SECRET is not defined');
-        }
+        $this->secret = $secretObj->getSecret();
+    }
 
-        self::$secret = $secretVar;
+    protected function generateNewSecret(): void
+    {
+        $this->setSecret(md5(bin2hex(random_bytes(256))));
     }
 }

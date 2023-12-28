@@ -2,7 +2,10 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use Nacho\Contracts\RequestInterface;
+use Nacho\Contracts\UserHandlerInterface;
 use Nacho\Exceptions\PasswordInvalidException;
+use Nacho\Models\HttpResponse;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\AdminHelper;
 use PixlMint\CMS\Models\TokenUser;
@@ -14,15 +17,26 @@ use Nacho\Security\UserRepository;
 
 class AuthenticationController extends AbstractController
 {
-    public function login(Request $request): string
+    private UserHandlerInterface $userHandler;
+    private UserRepository $userRepository;
+    private TokenHelper $tokenHelper;
+
+    public function __construct(UserHandlerInterface $userHandler, UserRepository $userRepository, TokenHelper $tokenHelper)
     {
-        $tokenHelper = new TokenHelper();
+        parent::__construct();
+        $this->userHandler = $userHandler;
+        $this->userRepository = $userRepository;
+        $this->tokenHelper = $tokenHelper;
+    }
+
+    public function login(RequestInterface $request): HttpResponse
+    {
         $username = $request->getBody()['username'];
         $password = $request->getBody()['password'];
         if (strtolower($request->requestMethod) === 'post') {
-            $user = $this->nacho->userHandler->findUser($username);
-            if ($this->nacho->userHandler->passwordVerify($user, $password)) {
-                $token = $tokenHelper->getToken($user);
+            $user = $this->userHandler->findUser($username);
+            if ($this->userHandler->passwordVerify($user, $password)) {
+                $token = $this->tokenHelper->getToken($user);
                 return $this->json(['token' => $token]);
             } else {
                 return $this->json(['message' => 'This password/ username is not valid'], 400);
@@ -32,7 +46,7 @@ class AuthenticationController extends AbstractController
         return $this->json([], 405);
     }
 
-    public function requestNewPassword(Request $request): string
+    public function requestNewPassword(RequestInterface $request): HttpResponse
     {
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
@@ -41,14 +55,14 @@ class AuthenticationController extends AbstractController
         $resetLink = md5(random_bytes(100));
 
         /** @var TokenUser $user */
-        $user = $this->nacho->userHandler->findUser($username);
+        $user = $this->userHandler->findUser($username);
 
         if (!$user) {
             return $this->json([], 400);
         }
 
         $user->setResetLink($resetLink);
-        RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
+        $this->userRepository->set($user);
 
         if (!$user->getEmail()) {
             return $this->json(['message' => 'This user has no E-Mail Address'], 400);
@@ -61,7 +75,7 @@ class AuthenticationController extends AbstractController
         return $this->json(['success' => $success]);
     }
 
-    public function restorePassword(Request $request): string
+    public function restorePassword(RequestInterface $request): HttpResponse
     {
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
@@ -73,7 +87,7 @@ class AuthenticationController extends AbstractController
         $password2 = $_REQUEST['password2'];
 
         /** @var TokenUser $user */
-        $user = $this->nacho->userHandler->findUser($username);
+        $user = $this->userHandler->findUser($username);
 
         if (!$user) {
             return $this->json(['message' => "Unable to find user with username $username"], 404);
@@ -88,18 +102,17 @@ class AuthenticationController extends AbstractController
         }
 
         /** @var TokenUser $user */
-        $user = $this->nacho->userHandler->setPasswordForUser($user, $password1);
-        $tokenHelper = new TokenHelper();
+        $user = $this->userHandler->setPasswordForUser($user, $password1);
 
-        $tokenHelper->generateNewTokenStamp($user);
+        $this->tokenHelper->generateNewTokenStamp($user);
         $user->setResetLink('');
-        $token = $tokenHelper->getToken($user);
-        RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
+        $token = $this->tokenHelper->getToken($user);
+        $this->userRepository->set($user);
 
         return $this->json(['token' => $token]);
     }
 
-    public function generateNewToken(Request $request): string
+    public function generateNewToken(RequestInterface $request): HttpResponse
     {
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
@@ -107,43 +120,41 @@ class AuthenticationController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        $tokenHelper = new TokenHelper();
 
         /** @var TokenUser $user */
         $user = $this->nacho->userHandler->getCurrentUser();
 
-        $tokenHelper->generateNewTokenStamp($user);
-        $newToken = $tokenHelper->getToken($user);
-        RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
+        $this->tokenHelper->generateNewTokenStamp($user);
+        $newToken = $this->tokenHelper->getToken($user);
+        $this->userRepository->set($user);
 
         return $this->json(['token' => $newToken]);
     }
 
-    public function changePassword(): string
+    public function changePassword(): HttpResponse
     {
         /** @var TokenUser $user */
-        $user = $this->nacho->userHandler->findUser($_REQUEST['username']);
+        $user = $this->userHandler->findUser($_REQUEST['username']);
 
         if ($_REQUEST['newPassword1'] !== $_REQUEST['newPassword2']) {
             return $this->json(['message' => 'The Passwords have to match'], 400);
         }
 
         try {
-            $this->nacho->userHandler->changePassword($user->getUsername(), $_REQUEST['currentPassword'], $_REQUEST['newPassword1']);
+            $this->userHandler->changePassword($user->getUsername(), $_REQUEST['currentPassword'], $_REQUEST['newPassword1']);
         } catch (PasswordInvalidException $e) {
             return $this->json(['message' => 'Invalid Password'], 400);
         }
 
-        $tokenHelper = new TokenHelper();
-        $tokenHelper->generateNewTokenStamp($user);
-        $newToken = $tokenHelper->getToken($user);
+        $this->tokenHelper->generateNewTokenStamp($user);
+        $newToken = $this->tokenHelper->getToken($user);
 
-        RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
+        $this->userRepository->set($user);
 
         return $this->json(['token' => $newToken]);
     }
 
-    public function createAdmin(Request $request): string
+    public function createAdmin(RequestInterface $request): HttpResponse
     {
         if (AdminHelper::isAdminCreated()) {
             return $this->json(['message' => 'An Admin already exists'], 400);
@@ -156,17 +167,15 @@ class AuthenticationController extends AbstractController
         $username = $_REQUEST['username'];
         $password = $_REQUEST['password'];
 
-        $user = new TokenUser(0, $username, 'Editor', null, null, null, null);
-        $guest = new TokenUser(0, 'Guest', 'Guest', null, null, null, null);
+        $user = new TokenUser(0, $username, 'Editor', null, null, null, null, null, null);
+        $guest = new TokenUser(0, 'Guest', 'Guest', null, null, null, null, null, null);
 
-        $tokenHelper = new TokenHelper();
+        $this->tokenHelper->generateNewTokenStamp($user);
 
-        $tokenHelper->generateNewTokenStamp($user);
+        $this->userRepository->set($user);
+        $this->userRepository->set($guest);
 
-        RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
-        RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($guest);
-
-        $this->nacho->userHandler->setPassword($username, $password);
+        $this->userHandler->setPassword($username, $password);
 
         return $this->json(['adminCreated' => true]);
     }

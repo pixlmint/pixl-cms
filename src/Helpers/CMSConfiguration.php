@@ -2,37 +2,64 @@
 
 namespace PixlMint\CMS\Helpers;
 
-use Nacho\Helpers\ConfigurationHelper;
+use Nacho\Exceptions\ConfigurationValueDoesNotExistException;
+use Nacho\Helpers\ConfigurationContainer;
+use Nacho\Nacho;
 
 class CMSConfiguration
 {
-    public static function mediaDir(): string
+    private ConfigurationContainer $configurationContainer;
+
+    public function __construct(ConfigurationContainer $configurationContainer)
     {
-        return self::getConfigValue('mediaDir');
+        $this->configurationContainer = $configurationContainer;
     }
 
-    public static function mediaBaseUrl(): string
+    public function mediaDir(): string
     {
-        return self::getConfigValue('mediaBaseUrl');
+        return $this->getConfigValue('mediaDir');
     }
 
-    public static function version(): string|int|float
+    public function mediaBaseUrl(): string
     {
-        return self::getConfigValue('version');
+        return $this->getConfigValue('mediaBaseUrl');
     }
 
-    public static function contentDir(): string
+    public function version(): string|int|float
     {
-        return self::getConfigValue('contentDir');
+        return $this->getConfigValue('version');
     }
 
-    public static function dataDir(): string
+    public function contentDir(): string
+    {
+        return $this->getConfigValue('contentDir');
+    }
+
+    public function dataDir(): string
     {
         return $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'data';
     }
 
-    private static function getConfigValue(string $confName): mixed
+    public function frontendController(): ?string
     {
-        return ConfigurationHelper::getInstance()->getCustomConfig('base')[$confName];
+        return $this->getConfigValueSafe('frontendController');
+    }
+
+    private function getConfigValue(string $confName): mixed
+    {
+        if (!key_exists($confName, $this->configurationContainer->getCustomConfig('base'))) {
+            throw new ConfigurationValueDoesNotExistException($confName, 'base');
+        } else {
+            return $this->configurationContainer->getCustomConfig('base')[$confName];
+        }
+    }
+
+    private function getConfigValueSafe(string $confName): mixed
+    {
+        try {
+            return $this->getConfigValue($confName);
+        } catch (ConfigurationValueDoesNotExistException $e) {
+            return null;
+        }
     }
 }

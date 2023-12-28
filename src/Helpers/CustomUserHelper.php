@@ -2,12 +2,13 @@
 
 namespace PixlMint\CMS\Helpers;
 
+use Nacho\Nacho;
+use Nacho\ORM\ModelInterface;
+use PixlMint\CMS\Exception\InvalidTokenException;
 use PixlMint\CMS\Models\TokenUser;
-use Nacho\ORM\RepositoryManager;
 use Nacho\Security\JsonUserHandler;
 use Nacho\Contracts\UserHandlerInterface;
 use Nacho\Security\UserInterface;
-use Nacho\Security\UserRepository;
 
 final class CustomUserHelper extends JsonUserHandler implements UserHandlerInterface
 {
@@ -15,23 +16,39 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
     const ROLE_EDITOR = 'Editor';
     const ROLE_READER = 'Reader';
     const ROLE_GUEST = 'Guest';
+    private SecretHelper $secretHelper;
+    private TokenHelper $tokenHelper;
 
-    public function getCurrentUser()
+    public function __construct()
     {
+        parent::__construct();
+        $this->secretHelper = Nacho::$container->get(SecretHelper::class);
+        $this->tokenHelper = Nacho::$container->get(TokenHelper::class);
+    }
+
+    public function getCurrentUser(): ModelInterface|UserInterface
+    {
+        $guest = new TokenUser(0, 'Guest', self::ROLE_GUEST, null, null, null, null, null, null);
         if (!key_exists('HTTP_PIXLTOKEN', $_SERVER)) {
-            return new TokenUser(0, 'Guest', self::ROLE_GUEST, null, null, null, null, null, null);
+            return $guest;
         }
 
         $token = TokenHelper::getPossibleTokenFromRequest();
-        $tokenHelper = new TokenHelper();
 
-        return $tokenHelper->getUserByToken($token, $this->getUsers());
+        try {
+            return $this->tokenHelper->getUserByToken($token, $this->getUsers());
+        } catch (InvalidTokenException $e) {
+            return $guest;
+        }
     }
 
     public function isGranted(string $minRight = self::ROLE_GUEST, ?UserInterface $user = null): bool
     {
         if (!$user) {
             $user = $this->getCurrentUser();
+        }
+        if (!$user) {
+            return $minRight === self::ROLE_GUEST;
         }
         return parent::isGranted($minRight, $user);
     }
@@ -47,16 +64,16 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
 
     public function setPasswordForUser(TokenUser $user, string $newPassword): TokenUser
     {
-        $passwordHash = password_hash(SecretHelper::getSecret() . $newPassword, PASSWORD_DEFAULT);
+        $passwordHash = password_hash($this->secretHelper->getSecret() . $newPassword, PASSWORD_DEFAULT);
         $user->setPassword($passwordHash);
-        RepositoryManager::getInstance()->getRepository(UserRepository::class)->set($user);
+        $this->userRepository->set($user);
 
         return $user;
     }
 
     public function passwordVerify(UserInterface $user, string $password): bool
     {
-        $secret = SecretHelper::getSecret();
+        $secret = $this->secretHelper->getSecret();
 
         return password_verify($secret . $password, $user->getPassword());
     }

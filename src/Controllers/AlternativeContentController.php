@@ -2,26 +2,36 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use Nacho\Contracts\RequestInterface;
 use Nacho\Controllers\AbstractController;
+use Nacho\Helpers\PageManager;
+use Nacho\Models\HttpResponse;
 use Nacho\Models\Request;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 
 class AlternativeContentController extends AbstractController
 {
-    public function update(Request $request): string
+    private PageManager $pageManager;
+
+    public function __construct(PageManager $pageManager)
+    {
+        parent::__construct();
+        $this->pageManager = $pageManager;
+    }
+
+    public function update(RequestInterface $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
-        $helper = $this->nacho->getPageManager();
         $meta = json_decode($request->getBody()['meta'], true);
-        $success = $helper->editPage($request->getBody()['entry'], '', $meta);
+        $success = $this->pageManager->editPage($request->getBody()['entry'], '', $meta);
 
         return $this->json(['success' => $success]);
     }
 
-    public function upload(Request $request): string
+    public function upload(RequestInterface $request): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
@@ -34,14 +44,13 @@ class AlternativeContentController extends AbstractController
         $title = '.' . $request->getBody()['title'];
         $renderer = $request->getBody()['renderer'];
 
-        $helper = $this->nacho->getPageManager();
-        $page = $helper->create($parentFolder, $title);
+        $page = $this->pageManager->create($parentFolder, $title);
 
         if ($page === null) {
             return $this->json(['success' => false]);
         }
 
-        $helper->readPages();
+        $this->pageManager->readPages();
 
         $title = $page->meta->title;
         $title = ltrim($title, '.');
@@ -51,7 +60,7 @@ class AlternativeContentController extends AbstractController
             'title' => $title,
         ];
 
-        $success = $helper->editPage($page->id, '', $newMeta);
+        $success = $this->pageManager->editPage($page->id, '', $newMeta);
 
         if ($success) {
             return $this->json(['success' => true, 'id' => $page->id]);
