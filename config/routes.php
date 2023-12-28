@@ -5,7 +5,6 @@ use PixlMint\CMS\Controllers\AlternativeContentController;
 use PixlMint\CMS\Controllers\AuthenticationController;
 use PixlMint\CMS\Controllers\InitController;
 use PixlMint\CMS\Controllers\NotFoundController;
-use PixlMint\CMS\Controllers\UsersController;
 use PixlMint\CMS\Controllers\ViewPageController;
 
 return [

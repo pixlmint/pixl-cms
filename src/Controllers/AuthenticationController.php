@@ -122,7 +122,7 @@ class AuthenticationController extends AbstractController
         }
 
         /** @var TokenUser $user */
-        $user = $this->nacho->userHandler->getCurrentUser();
+        $user = $this->userHandler->getCurrentUser();
 
         $this->tokenHelper->generateNewTokenStamp($user);
         $newToken = $this->tokenHelper->getToken($user);
