@@ -8,12 +8,12 @@ class BackupHelper
 {
     private array $toBackup;
 
-    public function __construct()
+    public function __construct(CMSConfiguration $cmsConfiguration)
     {
         $this->toBackup = [
-            'content' => CMSConfiguration::contentDir(),
-            'media' => CMSConfiguration::mediaDir(),
-            'data' => CMSConfiguration::dataDir(),
+            'content' => $cmsConfiguration->contentDir(),
+            'media' => $cmsConfiguration->mediaDir(),
+            'data' => $cmsConfiguration->dataDir(),
         ];
     }
 
@@ -48,7 +48,7 @@ class BackupHelper
         return $success;
     }
 
-    private static function clearDirectory(string $dir)
+    private static function clearDirectory(string $dir): void
     {
         foreach (scandir($dir) as $path) {
             if ($path !== '.' && $path !== '..') {
@@ -57,7 +57,7 @@ class BackupHelper
         }
     }
 
-    private static function rmdir_recursive(string $dir)
+    private static function rmdir_recursive(string $dir): void
     {
         if (is_dir($dir)) {
             $objects = scandir($dir);
@@ -140,7 +140,7 @@ class BackupHelper
     }
 
     // In case of coping a directory inside itself, there is a need to hash check the directory otherwise and infinite loop of coping is generated
-    private static function hashDirectory($directory)
+    private static function hashDirectory($directory): bool|string
     {
         if (!is_dir($directory)) {
             return false;

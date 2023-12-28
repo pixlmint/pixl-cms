@@ -2,19 +2,19 @@
 
 namespace PixlMint\CMS\Repository;
 
-use PixlMint\CMS\Models\Cache;
 use Nacho\ORM\AbstractRepository;
 use Nacho\ORM\RepositoryInterface;
+use PixlMint\CMS\Models\Secret;
 
-class CacheRepository extends AbstractRepository
+class SecretRepository extends AbstractRepository
 {
     public static function getDataName(): string
     {
-        return 'cache';
+        return 'secret';
     }
 
     protected static function getModel(): string
     {
-        return Cache::class;
+        return Secret::class;
     }
 }
