@@ -3,7 +3,7 @@
 namespace PixlMint\CMS\Controllers;
 
 use Nacho\Exceptions\PasswordInvalidException;
-use Nacho\Models\HttpMethod;
+use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\AdminHelper;
 use PixlMint\CMS\Models\TokenUser;
 use PixlMint\CMS\Helpers\TokenHelper;
@@ -104,18 +104,13 @@ class AuthenticationController extends AbstractController
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
         }
-        $username = $_REQUEST['username'];
-        $token = TokenHelper::getPossibleTokenFromRequest();
-        if (!$username || !$token) {
-            return $this->json(['message' => 'Define Token and Username'], 400);
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
         }
         $tokenHelper = new TokenHelper();
-        if (!$tokenHelper->isTokenValid($token, $this->nacho->userHandler->getUsers())) {
-            return $this->json([], 400);
-        }
 
         /** @var TokenUser $user */
-        $user = $this->nacho->userHandler->findUser($username);
+        $user = $this->nacho->userHandler->getCurrentUser();
 
         $tokenHelper->generateNewTokenStamp($user);
         $newToken = $tokenHelper->getToken($user);
