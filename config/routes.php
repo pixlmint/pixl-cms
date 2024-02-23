@@ -44,6 +44,11 @@ return [
         "function" => "edit"
     ],
     [
+        "route" => "/api/admin/entry/move",
+        "controller" => AdminController::class,
+        "function" => "moveEntry"
+    ],
+    [
         'route' => '/api/admin/generate-backup',
         'controller' => AdminController::class,
         'function' => 'generateBackup',
