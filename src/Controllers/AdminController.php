@@ -8,6 +8,7 @@ use Nacho\Contracts\RequestInterface;
 use Nacho\Helpers\PicoVersioningHelper;
 use Nacho\Helpers\Utils;
 use Nacho\Models\HttpResponse;
+use Nacho\Models\Request;
 use Nacho\Nacho;
 use PixlMint\CMS\Actions\RenameAction;
 use PixlMint\CMS\Helpers\CustomUserHelper;
@@ -252,5 +253,22 @@ class AdminController extends AbstractController
         $cacheHelper->build();
 
         return $this->json(['success' => $success]);
+    }
+
+    public function moveEntry(RequestInterface $request): HttpResponse
+    {
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
+        }
+        if (!key_exists('entry', $request->getBody()) | !key_exists('targetFolder', $request->getBody())) {
+            return $this->json(['message' => 'Please define the entry to move and the target Folder'], 400);
+        }
+
+        $entryId = $request->getBody()['entry'];
+        $targetFolderId = $request->getBody()['targetFolder'];
+
+        $success = $this->pageManager->move($entryId, $targetFolderId);
+
+        return $this->json(['success' => $success], $success ? 200 : 400);
     }
 }
