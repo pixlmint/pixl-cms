@@ -4,7 +4,9 @@ namespace PixlMint\CMS\Controllers;
 
 use Nacho\Contracts\RequestInterface;
 use Nacho\Controllers\AbstractController;
+use Nacho\Helpers\HookHandler;
 use Nacho\Helpers\PageManager;
+use Nacho\Hooks\NachoAnchors\PostHandleUpdateAnchor;
 use Nacho\Models\HttpResponse;
 use Nacho\Models\Request;
 use PixlMint\CMS\Helpers\CustomUserHelper;
@@ -12,11 +14,13 @@ use PixlMint\CMS\Helpers\CustomUserHelper;
 class AlternativeContentController extends AbstractController
 {
     private PageManager $pageManager;
+    private HookHandler $hookHandler;
 
-    public function __construct(PageManager $pageManager)
+    public function __construct(PageManager $pageManager, HookHandler $hookHandler)
     {
         parent::__construct();
         $this->pageManager = $pageManager;
+        $this->hookHandler = $hookHandler;
     }
 
     public function update(RequestInterface $request): HttpResponse
@@ -36,7 +40,7 @@ class AlternativeContentController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('title', $request->getBody()) || !key_exists('parentFolder', $request->getBody()) || !key_exists('renderer', $request->getBody())) {
+        if (!$request->getBody()->has('title') || !$request->getBody()->has('parentFolder') || !$request->getBody()->has('renderer')) {
             return $this->json(['define title, parentFolder and renderer'], 400);
         }
 
@@ -62,6 +66,8 @@ class AlternativeContentController extends AbstractController
         ];
 
         $success = $this->pageManager->editPage($page->id, '', $newMeta);
+
+        $this->hookHandler->executeHook(PostHandleUpdateAnchor::getName(), ['entry' => $page]);
 
         if ($success) {
             return $this->json(['success' => true, 'id' => $page->id]);

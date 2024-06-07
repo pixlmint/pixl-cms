@@ -5,8 +5,10 @@ namespace PixlMint\CMS\Controllers;
 use DateTime;
 use Nacho\Contracts\PageManagerInterface;
 use Nacho\Contracts\RequestInterface;
+use Nacho\Helpers\HookHandler;
 use Nacho\Helpers\PicoVersioningHelper;
 use Nacho\Helpers\Utils;
+use Nacho\Hooks\NachoAnchors\PostHandleUpdateAnchor;
 use Nacho\Models\HttpResponse;
 use Nacho\Models\Request;
 use Nacho\Nacho;
@@ -22,11 +24,13 @@ use PixlMint\JournalPlugin\Helpers\CacheHelper;
 class AdminController extends AbstractController
 {
     private PageManagerInterface $pageManager;
+    private HookHandler $hookHandler;
 
-    public function __construct(PageManagerInterface $pageManager)
+    public function __construct(PageManagerInterface $pageManager, HookHandler $hookHandler)
     {
         parent::__construct();
         $this->pageManager = $pageManager;
+        $this->hookHandler = $hookHandler;
     }
 
     /**
@@ -38,17 +42,17 @@ class AdminController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $request->getBody())) {
+        if (!$request->getBody()->has('entry')) {
             return $this->json(['message' => 'Please define the entry'], HttpResponseCode::BAD_REQUEST);
         }
-        if (strtoupper($request->requestMethod) === HttpMethod::PUT && (!key_exists('lastUpdate', $request->getBody()) || !key_exists('content', $request->getBody()))) {
+        if ($request->isMethod(HttpMethod::PUT) && (!$request->getBody()->has('lastUpdate') || !$request->getBody()->has('content'))) {
             return $this->json(['message' => 'Please define content and lastUpdate arguments'], HttpResponseCode::BAD_REQUEST);
         }
-        $meta = $request->getBody()['meta'];
+        $meta = $request->getBody()->get('meta');
         if (Utils::isJson($meta)) {
-            $request->getBody()['meta'] = json_decode($meta, TRUE);
+            $request->getBody()->set('meta', json_decode($meta, TRUE));
         }
-        $strPage = $request->getBody()['entry'];
+        $strPage = $request->getBody()->get('entry');
         $page = $this->pageManager->getPage($strPage);
 
         if (!$page || !is_file($page->file)) {
@@ -57,8 +61,8 @@ class AdminController extends AbstractController
 
         if (strtoupper($request->requestMethod) === HttpMethod::PUT) {
             $meta = [];
-            if (key_exists('meta', $request->getBody())) {
-                $meta = $request->getBody()['meta'];
+            if ($request->getBody()->has('meta')) {
+                $meta = $request->getBody()->get('meta');
                 if (Utils::isJson($meta)) {
                     $meta = json_decode($meta, TRUE);
                 }
@@ -69,16 +73,16 @@ class AdminController extends AbstractController
             }
             if (!$versioningHelper->hasValidUpdateTime($request)) {
                 return $this->json([
-                    'message' => 'Invalid lastUpdate date supplied: ' . $request->getBody()['lastUpdate'],
+                    'message' => 'Invalid lastUpdate date supplied: ' . $request->getBody()->get('lastUpdate'),
                 ], HttpResponseCode::BAD_REQUEST);
             }
-            if (!$versioningHelper->canUpdateToVersion($page, $request->getBody()['lastUpdate'])) {
+            if (!$versioningHelper->canUpdateToVersion($page, $request->getBody()->get('lastUpdate'))) {
                 return $this->json([
                     'message' => 'This page has already been updated by another client more recently',
                     'lastUpdate' => $lastUpdateTime,
                 ], HttpResponseCode::CONFLICT);
             }
-            $content = $request->getBody()['content'];
+            $content = $request->getBody()->get('content');
             $this->pageManager->editPage($page->id, $content, $meta);
 
             return $this->json([
@@ -88,24 +92,21 @@ class AdminController extends AbstractController
             ]);
         }
 
-        return $this->json((array)$page);
+        return $this->json($page->toArray());
     }
 
     public function loadMarkdownFile(RequestInterface $request, CustomUserHelper $userHelper, TokenHelper $tokenHelper): HttpResponse
     {
-        $token = null;
+        $token = $request->getBody()->getOrNull('token');
         $users = $userHelper->getUsers();
-        if (key_exists('token', $request->getBody())) {
-            $token = $request->getBody()['token'];
-        }
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR) && !$tokenHelper->isTokenValid($token, $users)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $request->getBody())) {
+        if (!$request->getBody()->has('entry')) {
             return $this->json(['message' => 'Please define the entry'], 400);
         }
 
-        $pageId = $request->getBody()['entry'];
+        $pageId = $request->getBody()->get('entry');
         $page = $this->pageManager->getPage($pageId);
 
         if (!$page) {
@@ -124,12 +125,12 @@ class AdminController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $request->getBody()) || !key_exists('new_state', $request->getBody())) {
+        if (!$request->getBody()->has('entry') || !$request->getBody()->has('new_state')) {
             return $this->json(['message' => 'Please define entry and new_state'], 400);
         }
 
-        $pageId = $request->getBody()['entry'];
-        $newState = $request->getBody()['new_state'];
+        $pageId = $request->getBody()->get('entry');
+        $newState = $request->getBody()->get('new_state');
 
         $page = $this->pageManager->getPage($pageId);
 
@@ -138,10 +139,12 @@ class AdminController extends AbstractController
         }
 
         $content = $page->raw_content;
-        $meta = $page->meta;
-        $meta->security = $newState;
+        $meta = $page->meta->toArray();
+        $meta['security'] = $newState;
 
-        $success = $this->pageManager->editPage($pageId, $content, (array)$meta);
+        $success = $this->pageManager->editPage($pageId, $content, $meta);
+
+        $this->hookHandler->executeHook(PostHandleUpdateAnchor::getName(), ['entry' => $page]);
 
         return $this->json(['success' => $success]);
     }
@@ -183,14 +186,19 @@ class AdminController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $request->getBody()) || !key_exists('new-title', $request->getBody())) {
+        if (!$request->getBody()->has('entry') || !$request->getBody()->has('new-title')) {
             return $this->json(['message' => 'Please define entry and content'], HttpResponseCode::BAD_REQUEST);
         }
         if (strtoupper($request->requestMethod) !== HttpMethod::PUT) {
             return $this->json(['message' => 'Only PUT allowed'], HttpResponseCode::METHOD_NOT_ALLOWED);
         }
 
-        $success = RenameAction::run($request->getBody());
+        $args = [];
+        foreach ($request->getBody()->keys() as $key) {
+            $args[$key] = $request->getBody()->get($key);
+        }
+
+        $success = RenameAction::run($args);
 
         return $this->json(['success' => $success]);
     }
@@ -200,11 +208,11 @@ class AdminController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $request->getBody())) {
+        if (!$request->getBody()->has('entry')) {
             return $this->json(['message' => 'Please define the entry to fetch'], 400);
         }
 
-        $entryId = $request->getBody()['entry'];
+        $entryId = $request->getBody()->get('entry');
         $entry = $this->pageManager->getPage($entryId);
 
         return $this->json(['lastChanged' => $entry->meta->dateUpdated]);
@@ -215,11 +223,11 @@ class AdminController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $request->getBody())) {
+        if (!$request->getBody()->has('entry')) {
             return $this->json(['message' => 'Please define the entry to delete'], 400);
         }
 
-        $entry = $request->getBody()['entry'];
+        $entry = $request->getBody()->get('entry');
 
         $success = $this->pageManager->delete($entry);
 
@@ -260,12 +268,12 @@ class AdminController extends AbstractController
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
-        if (!key_exists('entry', $request->getBody()) | !key_exists('targetFolder', $request->getBody())) {
+        if (!$request->getBody()->has('entry') | !$request->getBody()->has('targetFolder')) {
             return $this->json(['message' => 'Please define the entry to move and the target Folder'], 400);
         }
 
-        $entryId = $request->getBody()['entry'];
-        $targetFolderId = $request->getBody()['targetFolder'];
+        $entryId = $request->getBody()->get('entry');
+        $targetFolderId = $request->getBody()->get('targetFolder');
 
         $success = $this->pageManager->move($entryId, $targetFolderId);
 

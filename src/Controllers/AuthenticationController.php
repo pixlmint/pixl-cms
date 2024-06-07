@@ -5,6 +5,7 @@ namespace PixlMint\CMS\Controllers;
 use Nacho\Contracts\RequestInterface;
 use Nacho\Contracts\UserHandlerInterface;
 use Nacho\Exceptions\PasswordInvalidException;
+use Nacho\Models\HttpMethod;
 use Nacho\Models\HttpResponse;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\AdminHelper;
@@ -31,9 +32,9 @@ class AuthenticationController extends AbstractController
 
     public function login(RequestInterface $request): HttpResponse
     {
-        $username = $request->getBody()['username'];
-        $password = $request->getBody()['password'];
-        if (strtolower($request->requestMethod) === 'post') {
+        $username = $request->getBody()->get('username');
+        $password = $request->getBody()->get('password');
+        if ($request->isMethod(HttpMethod::POST)) {
             $user = $this->userHandler->findUser($username);
             if ($this->userHandler->passwordVerify($user, $password)) {
                 $token = $this->tokenHelper->getToken($user);
@@ -51,7 +52,7 @@ class AuthenticationController extends AbstractController
         if (strtolower($request->requestMethod) !== 'post') {
             return $this->json([], 405);
         }
-        $username = $_REQUEST['username'];
+        $username = $request->getBody()->get('username');
         $resetLink = md5(random_bytes(100));
 
         /** @var TokenUser $user */
@@ -81,10 +82,10 @@ class AuthenticationController extends AbstractController
             return $this->json([], 405);
         }
 
-        $username = $_REQUEST['username'];
-        $resetToken = $_REQUEST['resetToken'];
-        $password1 = $_REQUEST['password1'];
-        $password2 = $_REQUEST['password2'];
+        $username = $request->getBody()->get('username');
+        $resetToken = $request->getBody()->get('resetToken');
+        $password1 = $request->getBody()->get('password1');
+        $password2 = $request->getBody()->get('password2');
 
         /** @var TokenUser $user */
         $user = $this->userHandler->findUser($username);
@@ -164,8 +165,8 @@ class AuthenticationController extends AbstractController
             return $this->json(['message' => 'Create your admin']);
         }
 
-        $username = $_REQUEST['username'];
-        $password = $_REQUEST['password'];
+        $username = $request->getBody()->get('username');
+        $password = $request->getBody()->get('password');
 
         $user = new TokenUser(0, $username, 'Editor', null, null, null, null, null, null);
         $guest = new TokenUser(0, 'Guest', 'Guest', null, null, null, null, null, null);
