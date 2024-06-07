@@ -29,6 +29,6 @@ class ViewPageController extends AbstractController
         $content = $this->pageManager->renderPage($page);
         $page->content = $content;
 
-        return $this->json((array)$page);
+        return $this->json($page->toArray());
     }
 }
