@@ -58,6 +58,7 @@ class AlternativeContentController extends AbstractController
         $newMeta = [
             'renderer' => $renderer,
             'title' => $title,
+            'kind' => $renderer,
         ];
 
         $success = $this->pageManager->editPage($page->id, '', $newMeta);
