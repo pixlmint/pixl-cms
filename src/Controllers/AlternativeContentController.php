@@ -37,10 +37,13 @@ class AlternativeContentController extends AbstractController
     }
 
     // /api/entry/load-pdf
-    public function loadPdf(CMSConfiguration $config): HttpResponse
+    public function loadPdf(RequestInterface $request, CMSConfiguration $config): HttpResponse
     {
-        $url = $_REQUEST['p'];
-        $url = str_replace('%20', ' ', $url);
+        $token = $request->getBody()->getOrNull('pixltoken');
+        if ($token) {
+            $_SERVER['HTTP_PIXLTOKEN'] = $token;
+        }
+        $url = urldecode($request->getBody()->get('p'));
         $page = $this->pageManager->getPage($url);
         if (is_null($page)) {
             return $this->json(['message' => 'Unable to find Page ' . $url], HttpResponseCode::NOT_FOUND);
