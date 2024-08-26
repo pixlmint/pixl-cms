@@ -19,6 +19,11 @@ return [
         "function" => "loadEntry",
     ],
     [
+        "route" => "/api/entry/load-pdf",
+        "controller" => AlternativeContentController::class,
+        "function" => "loadPdf",
+    ],
+    [
         "route" => "/api/admin/entry/rename",
         "function" => "rename",
         "controller" => AdminController::class,
@@ -112,6 +117,16 @@ return [
         "route" => "/api/auth/generate-new-token",
         "controller" => AuthenticationController::class,
         "function" => "generateNewToken",
+    ],
+    [
+        "route" => "/api/auth/destroy-secret",
+        "controller" => AuthenticationController::class,
+        "function" => "destroySecret",
+    ],
+    [
+        "route" => "/api/auth/destroy-token",
+        "controller" => AuthenticationController::class,
+        "function" => "destroyToken",
     ],
     [
         "route" => "/api/auth/create-admin",

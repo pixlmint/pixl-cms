@@ -8,7 +8,8 @@ use Nacho\Helpers\HookHandler;
 use Nacho\Helpers\PageManager;
 use Nacho\Hooks\NachoAnchors\PostHandleUpdateAnchor;
 use Nacho\Models\HttpResponse;
-use Nacho\Models\Request;
+use Nacho\Models\HttpResponseCode;
+use PixlMint\CMS\Helpers\CMSConfiguration;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 
 class AlternativeContentController extends AbstractController
@@ -33,6 +34,25 @@ class AlternativeContentController extends AbstractController
         $success = $this->pageManager->editPage($request->getBody()['entry'], '', $meta);
 
         return $this->json(['success' => $success]);
+    }
+
+    // /api/entry/load-pdf
+    public function loadPdf(CMSConfiguration $config): HttpResponse
+    {
+        $url = $_REQUEST['p'];
+        $url = str_replace('%20', ' ', $url);
+        $page = $this->pageManager->getPage($url);
+        if (is_null($page)) {
+            return $this->json(['message' => 'Unable to find Page ' . $url], HttpResponseCode::NOT_FOUND);
+        }
+        $pdfName = $page->meta->getAdditionalValues()->get('alternative_content');
+        $absolutePath = $config->contentDir() . $page->meta->parentPath . '/' . $pdfName;
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment;filename="' . $pdfName . '"');
+        readfile($absolutePath);
+
+        return new HttpResponse('');
     }
 
     public function upload(RequestInterface $request): HttpResponse
