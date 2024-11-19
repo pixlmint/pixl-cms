@@ -2,9 +2,9 @@
 
 namespace PixlMint\CMS\Helpers;
 
+use Nacho\Security\UserRepository;
 use PixlMint\CMS\Exception\InvalidTokenException;
 use PixlMint\CMS\Models\TokenUser;
-use Nacho\Exceptions\UserDoesNotExistException;
 use Nacho\ORM\ModelInterface;
 use Nacho\ORM\TemporaryModel;
 use Nacho\Security\UserInterface;
@@ -12,10 +12,12 @@ use Nacho\Security\UserInterface;
 class TokenHelper
 {
     private SecretHelper $secretHelper;
+    private UserRepository $userRepository;
 
-    public function __construct(SecretHelper $secretHelper)
+    public function __construct(SecretHelper $secretHelper, UserRepository $userRepository)
     {
         $this->secretHelper = $secretHelper;
+        $this->userRepository = $userRepository;
     }
 
     public function getToken($user): string
@@ -70,9 +72,15 @@ class TokenHelper
      */
     public function getUserByToken(string $token, array $users): UserInterface|ModelInterface
     {
-        foreach ($users as $user) {
+        foreach ($users as $id => $user) {
             if ($token === $this->getToken($user)) {
-                return TokenUser::init(new TemporaryModel($user), 0);
+                if (is_array($user)) {
+                    $user = TokenUser::init(new TemporaryModel($user), $id);
+                    $this->userRepository->setInitialized($id, $user);
+                    return $user;
+                } else {
+                    return $user;
+                }
             }
         }
 

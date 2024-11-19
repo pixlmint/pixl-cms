@@ -5,10 +5,12 @@ namespace PixlMint\CMS\Controllers;
 use Nacho\Contracts\UserHandlerInterface;
 use Nacho\Helpers\HookHandler;
 use Nacho\Models\HttpResponse;
+use Nacho\ORM\ModelInterface;
 use PixlMint\CMS\Anchors\InitAnchor;
 use PixlMint\CMS\Helpers\CMSConfiguration;
 use PixlMint\CMS\Helpers\TokenHelper;
 use Nacho\Controllers\AbstractController;
+use PixlMint\CMS\Models\TokenUser;
 
 class InitController extends AbstractController
 {
@@ -45,6 +47,9 @@ class InitController extends AbstractController
     {
         $users = $this->userHandler->getUsers();
         foreach ($users as $user) {
+            if ($user instanceof ModelInterface) {
+                $user = $user->toArray();
+            }
             if ($user['role'] === 'Editor') {
                 return true;
             }

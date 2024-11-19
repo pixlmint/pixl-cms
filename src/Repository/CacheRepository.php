@@ -4,7 +4,6 @@ namespace PixlMint\CMS\Repository;
 
 use PixlMint\CMS\Models\Cache;
 use Nacho\ORM\AbstractRepository;
-use Nacho\ORM\RepositoryInterface;
 
 class CacheRepository extends AbstractRepository
 {

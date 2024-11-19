@@ -9,12 +9,12 @@ use Nacho\Models\HttpMethod;
 use Nacho\Models\HttpResponse;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\AdminHelper;
+use PixlMint\CMS\Helpers\SecretHelper;
 use PixlMint\CMS\Models\TokenUser;
 use PixlMint\CMS\Helpers\TokenHelper;
 use Nacho\Controllers\AbstractController;
-use Nacho\Models\Request;
-use Nacho\ORM\RepositoryManager;
 use Nacho\Security\UserRepository;
+use Psr\Log\LoggerInterface;
 
 class AuthenticationController extends AbstractController
 {
@@ -122,37 +122,83 @@ class AuthenticationController extends AbstractController
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
-        /** @var TokenUser $user */
+        $newToken = $this->generateNewTokenStamp();
+
+        return $this->json(['token' => $newToken]);
+    }
+
+    public function destroyToken(): HttpResponse
+    {
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
+        }
+
+        $this->generateNewTokenStamp();
+
+        return $this->json(['message' => 'Successfully logged out everywhere']);
+    }
+
+    private function generateNewTokenStamp()
+    {
         $user = $this->userHandler->getCurrentUser();
 
         $this->tokenHelper->generateNewTokenStamp($user);
         $newToken = $this->tokenHelper->getToken($user);
         $this->userRepository->set($user);
-
-        return $this->json(['token' => $newToken]);
+        return $newToken;
     }
 
-    public function changePassword(): HttpResponse
+    public function changePassword(RequestInterface $request): HttpResponse
     {
-        /** @var TokenUser $user */
-        $user = $this->userHandler->findUser($_REQUEST['username']);
+        $body = $request->getBody();
+        if (!$body->has('username') || !$body->has('currentPassword') || !$body->has('newPassword1') || !$body->has('newPassword2')) {
+            return $this->json(['message' => 'Please define username, currentPassword, newPassword1 and newPassword2'], 400);
+        }
 
-        if ($_REQUEST['newPassword1'] !== $_REQUEST['newPassword2']) {
+        /** @var TokenUser $user */
+        $user = $this->userHandler->findUser($body->get('username'));
+
+        if ($body->get('newPassword1') !== $body->get('newPassword2')) {
             return $this->json(['message' => 'The Passwords have to match'], 400);
         }
 
         try {
-            $this->userHandler->changePassword($user->getUsername(), $_REQUEST['currentPassword'], $_REQUEST['newPassword1']);
+            $this->userHandler->changePassword($user->getUsername(), $body->get('currentPassword'), $body->get('newPassword1'));
         } catch (PasswordInvalidException $e) {
             return $this->json(['message' => 'Invalid Password'], 400);
         }
 
-        $this->tokenHelper->generateNewTokenStamp($user);
-        $newToken = $this->tokenHelper->getToken($user);
+        if ($body->getOrNull('generateNewToken')) {
+            $this->tokenHelper->generateNewTokenStamp($user);
+            $newToken = $this->tokenHelper->getToken($user);
+        } else {
+            $newToken = '';
+        }
 
         $this->userRepository->set($user);
 
         return $this->json(['token' => $newToken]);
+    }
+
+    public function destroySecret(RequestInterface $request, SecretHelper $secretHelper, LoggerInterface $logger): HttpResponse
+    {
+        if (!$request->isMethod(HttpMethod::POST)) {
+            return $this->json(['message' => 'Only POST requests allowed'], 405);
+        }
+        if (!$this->isGranted(CustomUserHelper::ROLE_SUPER_ADMIN)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
+        }
+        $secretHelper->generateNewSecret();
+        $logger->info('Generated new secret key');
+
+        foreach ($this->userHandler->getUsers() as $user) {
+            /** @var $user TokenUser */
+            $logger->info('Destroying secret for user ' . $user->getUsername());
+            $user->setTokenStamp('');
+            $this->userRepository->set($user);
+        }
+
+        return $this->json(['message' => 'Destroyed Secret']);
     }
 
     public function createAdmin(RequestInterface $request): HttpResponse
@@ -168,13 +214,13 @@ class AuthenticationController extends AbstractController
         $username = $request->getBody()->get('username');
         $password = $request->getBody()->get('password');
 
-        $user = new TokenUser(0, $username, 'Editor', null, null, null, null, null, null);
-        $guest = new TokenUser(0, 'Guest', 'Guest', null, null, null, null, null, null);
+        $guest = new TokenUser(-1, 'Guest', 'Guest', null, null, null, null, null, null);
+        $user = new TokenUser(-1, $username, 'Editor', null, null, null, null, null, null);
 
         $this->tokenHelper->generateNewTokenStamp($user);
 
-        $this->userRepository->set($user);
         $this->userRepository->set($guest);
+        $this->userRepository->set($user);
 
         $this->userHandler->setPassword($username, $password);
 
