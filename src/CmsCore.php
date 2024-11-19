@@ -2,12 +2,12 @@
 
 namespace PixlMint\CMS;
 
+use Nacho\Bootstrap\ConfigurationMerger;
 use Nacho\Contracts\UserHandlerInterface;
 use Nacho\Models\ContainerDefinitionsHolder;
 use Nacho\Nacho;
 use Nacho\Helpers\HookHandler;
 use PixlMint\CMS\Anchors\InitAnchor;
-use PixlMint\CMS\Bootstrap\ConfigurationMerger;
 use PixlMint\CMS\Helpers\CustomExceptionHandler;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\SecretHelper;
@@ -15,67 +15,37 @@ use function DI\create;
 
 class CmsCore
 {
-    private array $plugins = [];
-    private array $config = [];
+    // private array $cmsConfig;
 
-    public function init($config = []): void
+    public function init(): void
     {
-        if (!$config) {
-            $this->config = self::loadConfig();
-        } else {
-            $this->config = $config;
-        }
-
         $core = new Nacho();
         $containerBuilder = $core->getContainerBuilder();
-        if (!$this->config['base']['debugEnabled']) {
+        // $this->cmsConfig = $this->loadConfig();
+
+        /*if (!$this->cmsConfig['base']['debugEnabled']) {
             $containerBuilder->enableCompilation('var/cache');
-        }
+        }*/
         $containerBuilder->addDefinitions($this->getContainerDefinitions());
 
         $core->init($containerBuilder);
 
-        if (!Nacho::$container->get('debug')) {
+        /*if (!Nacho::$container->get('debug')) {
             error_reporting(E_ERROR | E_PARSE);
             set_exception_handler([new CustomExceptionHandler(), 'handleException']);
-        }
+        }*/
 
         Nacho::$container->get(HookHandler::class)->registerAnchor(InitAnchor::getName(), new InitAnchor());
 
-        $core->run($this->config);
+        $core->run(require_once('config/config.php'));
     }
 
-    private function loadConfig(): array
-    {
-        $cmsConfig = require_once(self::getCMSDirectory() . 'config' . DIRECTORY_SEPARATOR . 'config.php');
-        $siteConfig = require_once('config/config.php');
+    private function loadConfig(): array {
+        $siteConfigPath = 'config/config.php';
+        $cmsConfigPath = $this->getCMSDirectory() . 'config/config.php';
 
-        if (key_exists('plugins', $siteConfig)) {
-            $this->plugins = $siteConfig['plugins'];
-        }
-
-        $pluginConfig = self::loadPluginsConfig();
-
-        $configMerger = new ConfigurationMerger($cmsConfig, $siteConfig, $pluginConfig);
-
-        return $configMerger->merge();
-    }
-
-    private function loadPluginsConfig(): array
-    {
-        $ret = [];
-        foreach ($this->plugins as $plugin) {
-            if ($this->isPluginEnabled($plugin)) {
-                $ret[$plugin['name']] = $plugin['config'];
-            }
-        }
-
-        return $ret;
-    }
-
-    private function isPluginEnabled(array $plugin): bool
-    {
-        return (key_exists('enabled', $plugin) && $plugin['enabled']) || !key_exists('enabled', $plugin);
+        $merger = new ConfigurationMerger(require($cmsConfigPath), require($siteConfigPath) );
+        return $merger->merge();
     }
 
     private function getCMSDirectory(): string
@@ -92,8 +62,10 @@ class CmsCore
     {
         return new ContainerDefinitionsHolder(2, [
             UserHandlerInterface::class => create(CustomUserHelper::class),
-            'debug' => $this->config['base']['debugEnabled'],
+            // 'debug' => $this->cmsConfig['base']['debugEnabled'],
+            'debug' => true,
             SecretHelper::class => create(SecretHelper::class),
         ]);
     }
 }
+

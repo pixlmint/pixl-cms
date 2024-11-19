@@ -45,7 +45,7 @@ class SecretHelper
         $this->secret = $secretObj->getSecret();
     }
 
-    protected function generateNewSecret(): void
+    public function generateNewSecret(): void
     {
         $this->setSecret(md5(bin2hex(random_bytes(256))));
     }
