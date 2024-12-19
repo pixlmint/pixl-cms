@@ -3,7 +3,7 @@
 namespace PixlMint\CMS\Repository;
 
 use Nacho\ORM\AbstractRepository;
-use PixlMint\CMS\Model\NavCache;
+use PixlMint\CMS\Models\NavCache;
 
 class NavCacheRepository extends AbstractRepository
 {
