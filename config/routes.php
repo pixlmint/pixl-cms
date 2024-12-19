@@ -6,12 +6,18 @@ use PixlMint\CMS\Controllers\AuthenticationController;
 use PixlMint\CMS\Controllers\InitController;
 use PixlMint\CMS\Controllers\NotFoundController;
 use PixlMint\CMS\Controllers\ViewPageController;
+use PixlMint\CMS\Controllers\NavController;
 
 return [
     [
         "route" => '/',
         "controller" => NotFoundController::class,
         "function" => "index",
+    ],
+    [
+        'route' => '/api/nav',
+        'controller' => NavController::class,
+        'function' => 'loadNav',
     ],
     [
         "route" => "/api/entry/view",
