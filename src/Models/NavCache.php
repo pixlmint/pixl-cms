@@ -1,6 +1,6 @@
 <?php
 
-namespace PixlMint\CMS\Model;
+namespace PixlMint\CMS\Models;
 
 use Nacho\Contracts\ArrayableInterface;
 use Nacho\ORM\AbstractModel;

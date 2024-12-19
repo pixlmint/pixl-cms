@@ -5,7 +5,7 @@ namespace PixlMint\CMS\Helpers;
 use Nacho\Contracts\PageManagerInterface;
 use Nacho\Helpers\PageManager;
 use Nacho\Helpers\PageSecurityHelper;
-use PixlMint\CMS\Model\NavCache;
+use PixlMint\CMS\Models\NavCache;
 use PixlMint\CMS\Repository\NavCacheRepository;
 use Psr\Log\LoggerInterface;
 
