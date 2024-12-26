@@ -7,6 +7,7 @@ use PixlMint\CMS\Controllers\InitController;
 use PixlMint\CMS\Controllers\NotFoundController;
 use PixlMint\CMS\Controllers\ViewPageController;
 use PixlMint\CMS\Controllers\NavController;
+use PixlMint\CMS\Controllers\RawMarkdownController;
 
 return [
     [
@@ -96,7 +97,7 @@ return [
     ],
     [
         "route" => "/api/admin/entry/view-markdown",
-        "controller" => AdminController::class,
+        "controller" => RawMarkdownController::class,
         "function" => "loadMarkdownFile",
     ],
     [
