@@ -1,0 +1,2 @@
+### /api/init
+GET {{HOST}}/api/init

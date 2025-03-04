@@ -6,11 +6,13 @@ use Nacho\Contracts\RequestInterface;
 use Nacho\Controllers\AbstractController;
 use Nacho\Helpers\HookHandler;
 use Nacho\Helpers\PageManager;
+use Nacho\Helpers\PdfHelper;
 use Nacho\Hooks\NachoAnchors\PostHandleUpdateAnchor;
 use Nacho\Models\HttpResponse;
 use Nacho\Models\HttpResponseCode;
 use PixlMint\CMS\Helpers\CMSConfiguration;
 use PixlMint\CMS\Helpers\CustomUserHelper;
+use Psr\Log\LoggerInterface;
 
 class AlternativeContentController extends AbstractController
 {
@@ -97,5 +99,40 @@ class AlternativeContentController extends AbstractController
         } else {
             return $this->json(['success' => false], 500);
         }
+    }
+
+    /**
+     * /api/admin/alternate/dump-file-into-content
+     */
+    public function dumpFileIntoContent(PdfHelper $pdfHelper, LoggerInterface $logger): HttpResponse
+    {
+        if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
+            return $this->json(['message' => 'You are not authenticated'], 401);
+        }
+
+        $pages = $this->pageManager->getPages();
+
+        $success = [];
+        $error = [];
+
+        foreach ($pages as $page) {
+            if ($page->meta->renderer === 'pdf') {
+                $path = dirname($page->file) . DIRECTORY_SEPARATOR . $page->meta->alternative_content;
+                if (is_file($path)) {
+                    try {
+                        $content = $pdfHelper->getContent($path);
+                        $this->pageManager->editPage($page->id, $content, $page->meta->toArray());
+                        $success[] = $page->id;
+                    } catch (\Exception $e) {
+                        $error[$page->id] = $e->getMessage();
+                    }
+                } else {
+                    $logger->warning("{$path} does not exist");
+                    $error[$page->id] = "does not exist";
+                }
+            }
+        }
+
+        return $this->json(['success' => $success, 'error' => $error]);
     }
 }

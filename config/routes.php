@@ -81,6 +81,11 @@ return [
         "function" => "update",
     ],
     [
+        "route" => "/api/admin/alternate/dump-file-into-content",
+        "controller" => AlternativeContentController::class,
+        "function" => "dumpFileIntoContent",
+    ],
+    [
         "route" => "/api/admin/entry/upload-alternative-content",
         "controller" => AlternativeContentController::class,
         "function" => "upload",
