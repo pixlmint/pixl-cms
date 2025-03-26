@@ -13,7 +13,12 @@ use function DI\create;
 
 class CmsCore
 {
-    // private array $cmsConfig;
+    private array $userContainerDefinitions;
+
+    public function __construct(array $userContainerDefinitions = [])
+    {
+        $this->userContainerDefinitions = $userContainerDefinitions;
+    }
 
     public function init(): void
     {
@@ -31,11 +36,11 @@ class CmsCore
 
     private function getContainerDefinitions(): ContainerDefinitionsHolder
     {
-        return new ContainerDefinitionsHolder(2, [
+        return new ContainerDefinitionsHolder(2, array_merge([
             UserHandlerInterface::class => create(CustomUserHelper::class),
             'debug' => false,
             SecretHelper::class => create(SecretHelper::class),
-        ]);
+        ], $this->userContainerDefinitions));
     }
 }
 
