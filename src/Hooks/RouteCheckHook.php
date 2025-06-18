@@ -8,6 +8,7 @@ use PixlMint\CMS\Helpers\CMSConfiguration;
 
 /**
  * This hook checks if the user is trying to access a /api route. If not it changes the Controller to FrontendController
+ * TODO: This hook should be changed to implement the OnRouteNotFound Hook
  */
 class RouteCheckHook implements PostFindRoute
 {
@@ -20,7 +21,7 @@ class RouteCheckHook implements PostFindRoute
 
     public function call(Route $route): Route
     {
-        if (!str_starts_with($route->getPath(), 'api') && self::frontendControllerExists()) {
+        /*if (!str_starts_with($route->getPath(), 'api') && self::frontendControllerExists()) {
             $newRoute = [
                 'route' => $route->getPath(),
                 'controller' => $this->cmsConfiguration->frontendController(),
@@ -28,7 +29,7 @@ class RouteCheckHook implements PostFindRoute
             ];
 
             $route = new Route($newRoute);
-        }
+    }*/
 
         return $route;
     }
