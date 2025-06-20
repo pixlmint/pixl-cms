@@ -29,11 +29,11 @@ final class CustomUserHelper extends JsonUserHandler implements UserHandlerInter
     public function getCurrentUser(): ModelInterface|UserInterface
     {
         $guest = new TokenUser(0, 'Guest', self::ROLE_GUEST, null, null, null, null, null, null);
-        if (!key_exists('HTTP_PIXLTOKEN', $_SERVER)) {
+        $token = TokenHelper::getPossibleTokenFromRequest();
+
+        if (is_null($token)) {
             return $guest;
         }
-
-        $token = TokenHelper::getPossibleTokenFromRequest();
 
         try {
             return $this->tokenHelper->getUserByToken($token, $this->getUsers());

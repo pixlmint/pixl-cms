@@ -49,6 +49,8 @@ class TokenHelper
         $key = 'HTTP_PIXLTOKEN';
         if (key_exists($key, $_SERVER)) {
             return $_SERVER[$key];
+        } elseif (key_exists('PIXLTOKEN', $_COOKIE)) {
+            return $_COOKIE['PIXLTOKEN'];
         }
 
         return null;
