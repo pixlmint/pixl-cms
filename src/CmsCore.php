@@ -2,14 +2,17 @@
 
 namespace PixlMint\CMS;
 
+use DI\Container;
 use Nacho\Contracts\UserHandlerInterface;
 use Nacho\Models\ContainerDefinitionsHolder;
 use Nacho\Nacho;
 use Nacho\Helpers\HookHandler;
 use PixlMint\CMS\Anchors\InitAnchor;
+use PixlMint\CMS\Helpers\CMSConfiguration;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use PixlMint\CMS\Helpers\SecretHelper;
 use function DI\create;
+use function DI\factory;
 
 class CmsCore
 {
@@ -38,7 +41,9 @@ class CmsCore
     {
         return new ContainerDefinitionsHolder(2, array_merge([
             UserHandlerInterface::class => create(CustomUserHelper::class),
-            'debug' => false,
+            'debug' => factory(function(Container $c) {
+                return $c->get(CMSConfiguration::class)->debugEnabled();
+            }),
             SecretHelper::class => create(SecretHelper::class),
         ], $this->userContainerDefinitions));
     }

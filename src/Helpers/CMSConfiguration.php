@@ -45,6 +45,11 @@ class CMSConfiguration
         return $this->getConfigValueSafe('frontendController');
     }
 
+    public function debugEnabled(): bool
+    {
+        return $this->getConfigValueSafe('debugEnabled') ?? false;
+    }
+
     private function getConfigValue(string $confName): mixed
     {
         if (!key_exists($confName, $this->configurationContainer->getCustomConfig('base'))) {
