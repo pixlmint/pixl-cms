@@ -10,6 +10,7 @@ use PixlMint\CMS\Anchors\InitAnchor;
 use PixlMint\CMS\Helpers\CMSConfiguration;
 use PixlMint\CMS\Helpers\TokenHelper;
 use Nacho\Controllers\AbstractController;
+use Nacho\Nacho;
 use PixlMint\CMS\Models\TokenUser;
 
 class InitController extends AbstractController
@@ -21,6 +22,7 @@ class InitController extends AbstractController
     private UserHandlerInterface $userHandler;
     private CMSConfiguration $cmsConfiguration;
     private TokenHelper $tokenHelper;
+    private bool $debug;
 
     public function __construct(HookHandler $hookHandler, UserHandlerInterface $userHandler, CMSConfiguration $cmsConfiguration, TokenHelper $tokenHelper)
     {
@@ -29,6 +31,7 @@ class InitController extends AbstractController
         $this->userHandler = $userHandler;
         $this->cmsConfiguration = $cmsConfiguration;
         $this->tokenHelper = $tokenHelper;
+        $this->debug = Nacho::$container->get('debug');
     }
 
     public function init(): HttpResponse
@@ -37,7 +40,7 @@ class InitController extends AbstractController
         $isAdminCreated = $this->isAdminCreated();
         $version = $this->cmsConfiguration->version();
 
-        $init = ['is_token_valid' => $isTokenValid, 'version' => $version, 'adminCreated' => $isAdminCreated];
+        $init = ['is_token_valid' => $isTokenValid, 'version' => $version, 'adminCreated' => $isAdminCreated, 'debug' => $this->debug];
         $init = $this->hookHandler->executeHook(InitAnchor::getName(), ['init' => $init]);
 
         return $this->json($init);
