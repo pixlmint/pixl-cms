@@ -4,7 +4,8 @@
     "require": {
         "ext-json":  "*",
         "pixlmint/nacho": "*",
-        "ext-zip": "*"
+        "ext-zip": "*",
+        "corneltek/getoptionkit": "^2.7"
     },
     "autoload": {
         "psr-4": {
