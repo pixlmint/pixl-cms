@@ -31,6 +31,11 @@ return [
         "function" => "loadPdf",
     ],
     [
+        "route" => "/api/entry/load-jupyter-notebook",
+        "controller" => AlternativeContentController::class,
+        "function" => "loadJupyterNotebook",
+    ],
+    [
         "route" => "/api/admin/entry/rename",
         "function" => "rename",
         "controller" => AdminController::class,

@@ -2,14 +2,17 @@
 
 namespace PixlMint\CMS\Controllers;
 
+use Exception;
 use Nacho\Contracts\RequestInterface;
 use Nacho\Controllers\AbstractController;
 use Nacho\Helpers\HookHandler;
+use Nacho\Helpers\JupyterNotebookHelper;
 use Nacho\Helpers\PageManager;
 use Nacho\Helpers\PdfHelper;
 use Nacho\Hooks\NachoAnchors\PostHandleUpdateAnchor;
 use Nacho\Models\HttpResponse;
 use Nacho\Models\HttpResponseCode;
+use Nacho\Models\PicoPage;
 use PixlMint\CMS\Helpers\CMSConfiguration;
 use PixlMint\CMS\Helpers\CustomUserHelper;
 use Psr\Log\LoggerInterface;
@@ -32,7 +35,11 @@ class AlternativeContentController extends AbstractController
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
-        $meta = json_decode($request->getBody()['meta'], true);
+        $meta = $request->getBody()->get('meta');
+        if (is_string($meta)) {
+            $meta = json_decode($meta, true);
+        }
+
         $success = $this->pageManager->editPage($request->getBody()['entry'], '', $meta);
 
         return $this->json(['success' => $success]);
@@ -58,6 +65,28 @@ class AlternativeContentController extends AbstractController
         readfile($absolutePath);
 
         return new HttpResponse('');
+    }
+
+    // /api/entry/load-jupyter-notebook
+    public function loadJupyterNotebook(RequestInterface $request, CMSConfiguration $config): HttpResponse
+    {
+        $token = $request->getBody()->getOrNull('pixltoken');
+        if ($token) {
+            $_SERVER['HTTP_PIXLTOKEN'] = $token;
+        }
+        $url = urldecode($request->getBody()->get('p'));
+        $page = $this->pageManager->getPage($url);
+        if (is_null($page)) {
+            return $this->json(['message' => 'Unable to find Page ' . $url], HttpResponseCode::NOT_FOUND);
+        }
+        $notebookName = $page->meta->getAdditionalValues()->get('alternative_content');
+        $absolutePath = $config->contentDir() . $page->meta->parentPath . '/' . $notebookName;
+
+        $response = new HttpResponse(file_get_contents($absolutePath));
+
+        $response->setHeader('Content-Type', 'application/json');
+
+        return $response;
     }
 
     public function upload(RequestInterface $request): HttpResponse
@@ -104,35 +133,55 @@ class AlternativeContentController extends AbstractController
     /**
      * /api/admin/alternate/dump-file-into-content
      */
-    public function dumpFileIntoContent(PdfHelper $pdfHelper, LoggerInterface $logger): HttpResponse
+    public function dumpFileIntoContent(RequestInterface $request, PdfHelper $pdfHelper, JupyterNotebookHelper $notebookHelper, LoggerInterface $logger): HttpResponse
     {
         if (!$this->isGranted(CustomUserHelper::ROLE_EDITOR)) {
             return $this->json(['message' => 'You are not authenticated'], 401);
         }
 
-        $pages = $this->pageManager->getPages();
+        if ($request->getBody()->has('page')) {
+            $page = $this->pageManager->getPage($request->getBody()->get('page'));
+            $this->dumpSingleFileIntoContent($page, $pdfHelper, $notebookHelper);
 
-        $success = [];
-        $error = [];
+            return $this->json(['message' => 'success']);
+        } else {
+            $pages = $this->pageManager->getPages();
 
-        foreach ($pages as $page) {
-            if ($page->meta->renderer === 'pdf') {
-                $path = dirname($page->file) . DIRECTORY_SEPARATOR . $page->meta->alternative_content;
-                if (is_file($path)) {
+            $success = [];
+            $error = [];
+
+            foreach ($pages as $page) {
+                if (in_array($page->meta->renderer, ['pdf', 'ipynb'])) {
                     try {
-                        $content = $pdfHelper->getContent($path);
-                        $this->pageManager->editPage($page->id, $content, $page->meta->toArray());
+                        $this->dumpSingleFileIntoContent($page, $pdfHelper, $notebookHelper);
                         $success[] = $page->id;
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         $error[$page->id] = $e->getMessage();
                     }
-                } else {
-                    $logger->warning("{$path} does not exist");
-                    $error[$page->id] = "does not exist";
                 }
             }
+            return $this->json(['success' => $success, 'error' => $error]);
         }
+    }
 
-        return $this->json(['success' => $success, 'error' => $error]);
+    private function dumpSingleFileIntoContent(PicoPage $page, PdfHelper $pdfHelper, JupyterNotebookHelper $notebookHelper)
+    {
+        $path = dirname($page->file) . DIRECTORY_SEPARATOR . $page->meta->alternative_content;
+
+        if (is_file($path)) {
+            switch ($page->meta->renderer) {
+            case 'pdf':
+                $content = $pdfHelper->getContent($path);
+                break;
+            case 'ipynb':
+                $content = $notebookHelper->getContent($path);
+                break;
+            default:
+                throw new Exception("Unknown renderer " . $page->meta->renderer);
+            }
+            $this->pageManager->editPage($page->id, $content, $page->meta->toArray());
+        } else {
+            throw new Exception("$path does not exist");
+        }
     }
 }

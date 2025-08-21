@@ -1,5 +1,6 @@
 <?php
 
+use Nacho\Helpers\AlternativeContentHandlers\JupyterNotebookContentType;
 use Nacho\Helpers\AlternativeContentHandlers\PDFContentType;
 
 return [
@@ -17,6 +18,7 @@ return [
     ],
     'alternativeContentHandlers' => [
         PDFContentType::class,
+        JupyterNotebookContentType::class,
     ],
     'commands' => require_once("commands.php"),
 ];
