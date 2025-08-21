@@ -18,4 +18,5 @@ return [
     'alternativeContentHandlers' => [
         PDFContentType::class,
     ],
+    'commands' => require_once("commands.php"),
 ];
