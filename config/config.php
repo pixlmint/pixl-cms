@@ -2,8 +2,14 @@
 
 use Nacho\Helpers\AlternativeContentHandlers\JupyterNotebookContentType;
 use Nacho\Helpers\AlternativeContentHandlers\PDFContentType;
+use Nacho\Helpers\ConfigMerger;
 
-return [
+$userConfiguration  = [];
+if (is_file('/config/config.php')) {
+    $userConfiguration = include_once("/config/config.php");
+}
+
+$cmsConfig = [
     'routes' => require_once('routes.php'),
     'hooks' => [
         [
@@ -22,3 +28,9 @@ return [
     ],
     'commands' => require_once("commands.php"),
 ];
+
+if ($userConfiguration) {
+    return ConfigMerger::merge([$cmsConfig, $userConfiguration]);
+} else {
+    return $cmsConfig;
+}
